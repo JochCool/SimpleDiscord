@@ -74,36 +74,6 @@ namespace SimpleDiscord
 		readonly Dictionary<string, RatelimitBucket> bucketsById = new();
 		readonly Dictionary<(HttpMethod, string), RatelimitBucket> bucketsByRoute = new();
 
-		/*
-		// There will be more of these in the future.
-
-		// Will be set once it's first needed.
-		RatelimitBucket? createGlobalApplicationCommandBucket; // applications/{applicationId}/commands
-		RatelimitBucket? getGlobalApplicationCommandBucket; // applications/{applicationId}/commands
-		RatelimitBucket? deleteGlobalApplicationCommandBucket; // applications/{applicationId}/commands/{commandId}
-		RatelimitBucket? createGuildApplicationCommandBucket; // applications/{applicationId}/guilds/{guildId}/commands
-		RatelimitBucket? getGuildApplicationCommandBucket; // applications/{applicationId}/guilds/{guildId}/commands
-		RatelimitBucket? deleteGuildApplicationCommandBucket; // applications/{applicationId}/guilds/{guildId}/commands/{commandId}
-		RatelimitBucket? interactionCallbackBucket; // interactions/{interactionId}/{interactionToken}/callback
-		RatelimitBucket? createDmBucket; // users/@me/channels
-
-		// Maps a channel ID to a bucket
-		readonly Dictionary<string, RatelimitBucket> modifyChannelBuckets = new(); // channels/{channelId}
-		readonly Dictionary<string, RatelimitBucket> createMessageBuckets = new(); // channels/{channelId}/messages
-		readonly Dictionary<string, RatelimitBucket> editMessageBuckets = new(); // channels/{channelId}/messages/{messageId}
-		readonly Dictionary<string, RatelimitBucket> deleteMessageBuckets = new(); // channels/{channelId}/messages/{messageId}
-		readonly Dictionary<string, RatelimitBucket> pinMessageBuckets = new(); // channels/{channelId}/pins/{messageId}
-
-		// Map a guild ID to a bucket
-		readonly Dictionary<string, RatelimitBucket> createGuildChannelBuckets = new(); // guilds/{guildId}/channels
-		readonly Dictionary<string, RatelimitBucket> createGuildRoleBuckets = new(); // guilds/{guildId}/roles
-		readonly Dictionary<string, RatelimitBucket> getGuildRolesBuckets = new(); // guilds/{guildId}/roles
-		readonly Dictionary<string, RatelimitBucket> deleteGuildRoleBuckets = new();
-		readonly Dictionary<string, RatelimitBucket> changeGuildRolePositionsBuckets = new(); // guilds/{guildId}/roles
-		readonly Dictionary<string, RatelimitBucket> modifyGuildRoleBuckets = new(); // guilds/{guildId}/roles/{roleId}
-		readonly Dictionary<string, RatelimitBucket> changeGuildMemberRoleBuckets = new(); // guilds/{guildId}/members/{userId}/roles/{roleId}
-		*/
-
 		#endregion
 
 		/// <summary>

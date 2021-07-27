@@ -73,21 +73,6 @@ namespace SimpleDiscord
 			writer.WriteEndArray();
 		}
 
-		/// <inheritdoc cref="WriteObjectArray{T}(Utf8JsonWriter, string, IEnumerable{T}?, Action{T})"/>
-		internal static void WriteObjectArray<T>(this Utf8JsonWriter writer, string propertyName, IEnumerable<T>? array, Action<T, Utf8JsonWriter> writeObjectValues)
-		{
-			if (array is null) return;
-
-			writer.WriteStartArray(propertyName);
-			foreach (T element in array)
-			{
-				writer.WriteStartObject();
-				writeObjectValues(element, writer);
-				writer.WriteEndObject();
-			}
-			writer.WriteEndArray();
-		}
-
 		/// <summary>
 		/// Throws an <see cref="ArgumentException"/> if a <see href="https://discord.com/developers/docs/reference#snowflakes">snowflake ID</see> is invalid.
 		/// </summary>

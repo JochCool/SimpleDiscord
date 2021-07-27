@@ -105,39 +105,6 @@ namespace SimpleDiscord
 			}
 		}
 
-		// probably useless
-		/*
-		/// <summary>
-		/// Parses the response message from Discord as a JSON document.
-		/// </summary>
-		/// <returns>A <see cref="JsonDocument"/> object representing the response message.</returns>
-		/// <exception cref="ObjectDisposedException">This object has been disposed.</exception>
-		/// <exception cref="InvalidOperationException">No response was received from the Discord.</exception>
-		/// <exception cref="JsonException">The response does not represent a valid single JSON value.</exception>
-		public JsonDocument GetReponseAsJsonDocument()
-		{
-			if (IsDisposed) throw new ObjectDisposedException(GetType().FullName);
-			if (response is null) throw new InvalidOperationException("No response was received from the Discord HTTP API request.");
-
-			return JsonDocument.Parse(response.Content.ReadAsStream());
-		}
-
-		/// <summary>
-		/// Asynchronously parses the response message from Discord as a JSON document.
-		/// </summary>
-		/// <returns>A <see cref="JsonDocument"/> object representing the response message.</returns>
-		/// <exception cref="ObjectDisposedException">This object has been disposed.</exception>
-		/// <exception cref="InvalidOperationException">No response was received from the Discord.</exception>
-		/// <exception cref="JsonException">The response does not represent a valid single JSON value.</exception>
-		public async Task<JsonDocument> GetResponseAsJsonDocumentAsync()
-		{
-			if (IsDisposed) throw new ObjectDisposedException(GetType().FullName);
-			if (response is null) throw new InvalidOperationException("No response was received from the Discord HTTP API request.");
-
-			return await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
-		}
-		*/
-
 		#region IDisposable implementation
 
 		public bool IsDisposed => response is null && exception is null;

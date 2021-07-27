@@ -200,19 +200,6 @@ namespace SimpleDiscord
 		public int Position { get; }
 	}
 
-	public interface IMessage
-	{
-		string? Content { get; }
-
-		bool IsTts { get; }
-
-		MessageFlags Flags { get; }
-
-		IEnumerable<IEmbed> Embeds { get; }
-
-		IEnumerable<IActionRowComponent> Components { get; }
-	}
-
 	// https://discord.com/developers/docs/resources/channel#message-object-message-flags
 	[Flags]
 	public enum MessageFlags
@@ -285,21 +272,6 @@ namespace SimpleDiscord
 		/// </value>
 		public string? Title { get; }
 
-		// This is unused
-		/*
-		/// <summary>
-		/// Gets the type of embed
-		/// </summary>
-		/// <remarks>
-		/// <para>Embed types are "loosely defined" and, for the most part, are not used by our clients for rendering. Embed attributes power what is rendered. Embed types should be considered deprecated and might be removed in a future API version.</para>
-		/// <para>For more information about the options, see <see href="https://discord.com/developers/docs/resources/channel#embed-object-embed-types">Discord's documentation</see>.</para>
-		/// </remarks>
-		/// <value>
-		/// One of "rich", "image", "video", "gifv", "article",  or "link".
-		/// </value>
-		public string Type { get; }
-		*/
-
 		/// <summary>
 		/// Gets the description of the embed.
 		/// </summary>
@@ -343,33 +315,6 @@ namespace SimpleDiscord
 		/// </value>
 		public IEmbedFooter? Footer { get; }
 
-		// This is pretty useless since only the Url property is used anyway.
-		/*
-		/// <summary>
-		/// Gets information about the image in this embed.
-		/// </summary>
-		/// <value>
-		/// An <see cref="IEmbedMedia"/> instance representing the image, or <see langword="null"/> if there is none.
-		/// </value>
-		public IEmbedMedia? Image { get; }
-
-		/// <summary>
-		/// Gets information about the thumbnail of this embed.
-		/// </summary>
-		/// <value>
-		/// An <see cref="IEmbedMedia"/> instance representing the thumbnail, or <see langword="null"/> if there is none.
-		/// </value>
-		public IEmbedMedia? Thumbnail { get; }
-
-		/// <summary>
-		/// Gets information about the video in this embed.
-		/// </summary>
-		/// <value>
-		/// An <see cref="IEmbedMedia"/> instance representing the video, or <see langword="null"/> if there is none.
-		/// </value>
-		public IEmbedMedia? Video { get; }
-		*/
-
 		/// <summary>
 		/// Gets the URL of the image in this embed.
 		/// </summary>
@@ -392,9 +337,6 @@ namespace SimpleDiscord
 		/// </value>
 		public string? ThumbnailUrl { get; }
 
-		// no clue what this is; I am not using it anyway.
-		//public IEmbedProvider? Provider { get; }
-
 		/// <summary>
 		/// Gets information about the author of this embed.
 		/// </summary>
@@ -412,50 +354,6 @@ namespace SimpleDiscord
 		public IEnumerable<IEmbedField>? Fields { get; }
 	}
 
-	/// <summary>
-	/// Represents media in an embed, such as an image, a thumbnail or a video.
-	/// </summary>
-	/// <remarks>
-	/// <para>When creating a new message, only the <see cref="Url"/> property is used.</para>
-	/// </remarks>
-	public interface IEmbedMedia
-	{
-		/// <summary>
-		/// Gets the source URL of the media.
-		/// </summary>
-		/// <remarks>
-		/// <para>Thumbnails and images only support HTTP(S) and attachments.</para>
-		/// </remarks>
-		/// <value>
-		/// The source URL of the media.
-		/// </value>
-		public string? Url { get; }
-
-		/// <summary>
-		/// Gets a proxied URL of the media.
-		/// </summary>
-		/// <value>
-		/// A proxied URL of the media.
-		/// </value>
-		public string? ProxyUrl { get; }
-
-		/// <summary>
-		/// Gets the height of the media.
-		/// </summary>
-		/// <value>
-		/// The height of the media.
-		/// </value>
-		public int? Width { get; }
-
-		/// <summary>
-		/// Gets the width of the media.
-		/// </summary>
-		/// <value>
-		/// The width of the media.
-		/// </value>
-		public int? Height { get; }
-	}
-
 	public interface IHasIcon
 	{
 		/// <summary>
@@ -468,16 +366,6 @@ namespace SimpleDiscord
 		/// The URL of the icon.
 		/// </value>
 		public string? IconUrl { get; }
-
-		/*
-		/// <summary>
-		/// Gets the proxied URL of the icon to display.
-		/// </summary>
-		/// <value>
-		/// The proxied URL of the icon.
-		/// </value>
-		public string? ProxyIconUrl { get; }
-		//*/
 	}
 
 	/// <summary>
