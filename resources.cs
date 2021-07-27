@@ -766,7 +766,9 @@ namespace SimpleDiscord
 		Boolean = 5,
 		User = 6,
 		Channel = 7,
-		Role = 8
+		Role = 8,
+		Mentionable = 9,
+		Number = 10
 	}
 
 	#endregion
