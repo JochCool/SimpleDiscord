@@ -293,6 +293,7 @@ namespace SimpleDiscord
 						switch ((GatewayOpcode)receivedDocument.RootElement.GetProperty("op").GetInt32())
 						{
 							case GatewayOpcode.Hello:
+								waitingForHeartbeatAck = false;
 
 								// Start heartbeating
 								int heartbeatInterval = receivedDocument.RootElement.GetProperty("d").GetProperty("heartbeat_interval").GetInt32();
@@ -560,7 +561,7 @@ namespace SimpleDiscord
 					client.isOnTimeout = false;
 					return;
 				}
-				
+
 				toSend = client.sendingQueue.First!.Value;
 				client.sendingQueue.RemoveFirst();
 			}
@@ -654,7 +655,7 @@ namespace SimpleDiscord
 			{
 				Task<DiscordRequestResult>? sendingTask = null;
 				RatelimitBucket? bucket;
-				
+
 				(HttpMethod, string) key = (method, endpoint);
 
 				// Get or create bucket for this route
@@ -688,7 +689,7 @@ namespace SimpleDiscord
 								bucket.remaining--;
 								break;
 							}
-								
+
 							// Wait for expiration
 							waitTask = Task.Delay(bucket.TimeLeft, cancellationToken);
 						}
