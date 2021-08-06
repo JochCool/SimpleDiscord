@@ -489,7 +489,7 @@ namespace SimpleDiscord
 		/// Gets the UI element's label.
 		/// </summary>
 		/// <value>
-		/// The text that appears on the UI element; max 80 characters.
+		/// The text that appears on the UI element.
 		/// </value>
 		string Label { get; }
 
@@ -638,7 +638,7 @@ namespace SimpleDiscord
 		/// Gets an additional description of the option.
 		/// </summary>
 		/// <value>
-		/// The description of this option; max 50 characters; or <see langword="null"/> if this option has no description.
+		/// The description of this option; max 100 characters; or <see langword="null"/> if this option has no description.
 		/// </value>
 		string? Description { get; }
 
