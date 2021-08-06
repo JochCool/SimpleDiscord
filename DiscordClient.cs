@@ -46,6 +46,12 @@ namespace SimpleDiscord
 		// Will be set when the gateway URL is fetched.
 		static DateTime gatewayUrlExpires;
 
+		// The task that fetches the URL
+		static Task? gatewayFetchTask;
+
+		// Lock onto this before using the task
+		static readonly object gatewayLockObject = new();
+
 		#endregion
 
 		readonly string token;
@@ -168,51 +174,28 @@ namespace SimpleDiscord
 			// This try/finally block makes sure the WebSocket is disposed when this method exits.
 			try
 			{
-				// Fetch & cache the URL to connect to
-				if (gatewayUrl is null || gatewayUrlExpires < DateTime.UtcNow)
+				// Ensure that we have a gateway URL
+				Task? toAwait;
+				lock (gatewayLockObject)
 				{
-					try
+					if (gatewayFetchTask is not null)
 					{
-						using HttpResponseMessage gatewayResponse = await httpClient.GetAsync("gateway", HttpCompletionOption.ResponseHeadersRead);
-
-						using JsonDocument gatewayResponseDocument = JsonDocument.Parse(await gatewayResponse.Content.ReadAsStreamAsync());
-						UriBuilder gatewayUrlBuilder = new UriBuilder(gatewayResponseDocument.RootElement.GetProperty("url").GetString()!);
-
-						// Add a query to the URL, as specified in https://discord.com/developers/docs/topics/gateway#connecting-gateway-url-params
-						NameValueCollection gatewayUrlQuery = HttpUtility.ParseQueryString(gatewayUrlBuilder.Query);
-						gatewayUrlQuery["v"] = "8";
-						gatewayUrlQuery["encoding"] = "json";
-						gatewayUrlBuilder.Query = gatewayUrlQuery.ToString();
-
-						gatewayUrl = gatewayUrlBuilder.Uri;
-
-#if DEBUG
-						Debug.Log("Gateway URL: " + gatewayUrl);
-#endif
-
-						if (gatewayResponse.Headers.CacheControl is not null && gatewayResponse.Headers.CacheControl.MaxAge is not null)
-						{
-							gatewayUrlExpires = DateTime.UtcNow + (TimeSpan)gatewayResponse.Headers.CacheControl.MaxAge;
-						}
+						toAwait = gatewayFetchTask;
 					}
-#if DEBUG
-					catch (Exception exception)
+					else if (gatewayUrl is null || gatewayUrlExpires < DateTime.UtcNow)
 					{
-						Debug.Warn($"Fetching the gateway URL failed: {exception}");
-#else
-					catch
-					{
-#endif
-						// Use previous URL or default to the normal one.
-						gatewayUrl ??= new Uri(@"wss://gateway.discord.gg/?v=8&encoding=json", UriKind.Absolute);
+						// Fetch & cache the URL to connect to
+						toAwait = FetchGatewayUrl();
 					}
+					else toAwait = null;
 				}
+				if (toAwait is not null) await toAwait;
 
 #if DEBUG
 				Debug.Log("Connecting...");
 #endif
 
-				await webSocket.ConnectAsync(gatewayUrl, CancellationToken.None);
+				await webSocket.ConnectAsync(gatewayUrl!, CancellationToken.None);
 
 				// This timer will be activated once there is data to send.
 				if (sendingTimer is null) sendingTimer = new Timer(SendData, this, Timeout.Infinite, webSocketRateLimit);
@@ -448,6 +431,46 @@ namespace SimpleDiscord
 				}
 			}
 #endif
+		}
+
+		// Sets the gatewayUrl field to an appropriate value
+		private async Task FetchGatewayUrl()
+		{
+			try
+			{
+				using HttpResponseMessage gatewayResponse = await httpClient.GetAsync("gateway", HttpCompletionOption.ResponseHeadersRead);
+
+				using JsonDocument gatewayResponseDocument = JsonDocument.Parse(await gatewayResponse.Content.ReadAsStreamAsync());
+				UriBuilder gatewayUrlBuilder = new UriBuilder(gatewayResponseDocument.RootElement.GetProperty("url").GetString()!);
+
+				// Add a query to the URL, as specified in https://discord.com/developers/docs/topics/gateway#connecting-gateway-url-params
+				NameValueCollection gatewayUrlQuery = HttpUtility.ParseQueryString(gatewayUrlBuilder.Query);
+				gatewayUrlQuery["v"] = "8";
+				gatewayUrlQuery["encoding"] = "json";
+				gatewayUrlBuilder.Query = gatewayUrlQuery.ToString();
+
+				gatewayUrl = gatewayUrlBuilder.Uri;
+
+#if DEBUG
+				Debug.Log("Gateway URL: " + gatewayUrl);
+#endif
+
+				if (gatewayResponse.Headers.CacheControl is not null && gatewayResponse.Headers.CacheControl.MaxAge is not null)
+				{
+					gatewayUrlExpires = DateTime.UtcNow + (TimeSpan)gatewayResponse.Headers.CacheControl.MaxAge;
+				}
+			}
+#if DEBUG
+			catch (Exception exception)
+			{
+				Debug.Warn($"Fetching the gateway URL failed: {exception}");
+#else
+			catch
+			{
+#endif
+				// Use previous URL or default to the normal one.
+				gatewayUrl ??= new Uri(@"wss://gateway.discord.gg/?v=8&encoding=json", UriKind.Absolute);
+			}
 		}
 
 		/// <summary>
