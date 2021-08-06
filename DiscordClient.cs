@@ -549,12 +549,11 @@ namespace SimpleDiscord
 		{
 			if (state is not DiscordClient client) throw new InvalidOperationException("Expected client instance.");
 
-			if (!client.IsConnected) return;
-
-			ReadOnlyMemory<byte> toSend;
-
+			ValueTask sendingTask;
 			lock (client.sendingQueue)
 			{
+				if (!client.IsConnected) return;
+
 				if (client.sendingQueue.Count == 0)
 				{
 					// Nothing left to send so pause the timer
@@ -562,17 +561,19 @@ namespace SimpleDiscord
 					client.isOnTimeout = false;
 					return;
 				}
-				
-				toSend = client.sendingQueue.First!.Value;
+
+				ReadOnlyMemory<byte> toSend = client.sendingQueue.First!.Value;
 				client.sendingQueue.RemoveFirst();
-			}
 
 #if DEBUG
-			Debug.Log("Sending: " + Encoding.UTF8.GetString(toSend.Span));
+				Debug.Log("Sending: " + Encoding.UTF8.GetString(toSend.Span));
 #endif
 
-			// The await keyword makes no functional difference, but code analysis told me to put it here so whatever.
-			await client.webSocket!.SendAsync(toSend, WebSocketMessageType.Text, true, CancellationToken.None);
+				sendingTask = client.webSocket!.SendAsync(toSend, WebSocketMessageType.Text, true, CancellationToken.None);
+			}
+
+			// The await keyword makes no functional difference, but code analysis told me to await it so whatever.
+			await sendingTask;
 		}
 
 		/// <summary>
