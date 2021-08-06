@@ -26,6 +26,8 @@ namespace SimpleDiscord
 	{
 		#region Fields and auto-implemented properties
 
+		#region Static/constant fields
+
 		// Some limits defined by Discord
 		const int maxDiscordMessageLength = 2000;
 		const int maxChannelNameLength = 100;
@@ -44,6 +46,12 @@ namespace SimpleDiscord
 		// Will be set when the gateway URL is fetched.
 		static DateTime gatewayUrlExpires;
 
+		#endregion
+
+		readonly string token;
+
+		// The connection to the gateway. Null if the client is disconnected.
+		ClientWebSocket? webSocket;
 
 		// Contains the data that still needs to be sent over the WebSocket connection, but hasn't been sent yet because isOnTimeout is true. The first item in the list will be sent first.
 		// ALWAYS lock on this collection before using it!
@@ -57,24 +65,16 @@ namespace SimpleDiscord
 		// True if a heartbeat has been sent and the client is waiting for a HeartbeatAck opcode from the server.
 		bool waitingForHeartbeatAck;
 
-		// The connection to the gateway. Null if the client is disconnected.
-		ClientWebSocket? webSocket;
+		// The last sequence number that was received from the WebSocket, or -1 if none has been received. Used for heartbeating.
+		long lastSequenceNumber = -1;
 
 		// Used for all HTTP requests to Discord.
 		// This is not static because the constructor adds some client-specific default headers.
 		readonly HttpClient httpClient = new HttpClient() { BaseAddress = httpApiBaseUrl };
 
-		readonly string token;
-
-		// The last sequence number that was received from the WebSocket, or -1 if none has been received. Used for heartbeating.
-		long lastSequenceNumber = -1;
-
-		#region Ratelimit buckets
-
+		// Used to look up ratelimit buckets for HTTP requests.
 		readonly Dictionary<string, RatelimitBucket> bucketsById = new();
 		readonly Dictionary<(HttpMethod, string), RatelimitBucket> bucketsByRoute = new();
-
-		#endregion
 
 		/// <summary>
 		/// Gets a value indicating whether or not this instance has been disposed and cannot be used for connecting.
@@ -200,7 +200,7 @@ namespace SimpleDiscord
 					{
 						Debug.Warn($"Fetching the gateway URL failed: {exception}");
 #else
-					catch (Exception)
+					catch
 					{
 #endif
 						// Use previous URL or default to the normal one.
@@ -232,7 +232,8 @@ namespace SimpleDiscord
 #if DEBUG
 					catch (WebSocketException exception)
 					{
-						Debug.Log($"An exception occurred in WebSocket connection. Inner exception: {exception.InnerException}");
+						Debug.Log($"An exception occurred in WebSocket connection: {exception}");
+						Debug.Log($"Inner exception: {exception.InnerException}");
 #else
 					catch (WebSocketException)
 					{
@@ -561,7 +562,7 @@ namespace SimpleDiscord
 					client.isOnTimeout = false;
 					return;
 				}
-
+				
 				toSend = client.sendingQueue.First!.Value;
 				client.sendingQueue.RemoveFirst();
 			}
@@ -655,7 +656,7 @@ namespace SimpleDiscord
 			{
 				Task<DiscordRequestResult>? sendingTask = null;
 				RatelimitBucket? bucket;
-
+				
 				(HttpMethod, string) key = (method, endpoint);
 
 				// Get or create bucket for this route
@@ -689,7 +690,7 @@ namespace SimpleDiscord
 								bucket.remaining--;
 								break;
 							}
-
+								
 							// Wait for expiration
 							waitTask = Task.Delay(bucket.TimeLeft, cancellationToken);
 						}
