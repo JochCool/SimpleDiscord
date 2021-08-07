@@ -239,7 +239,7 @@ namespace SimpleDiscord
 		/// Gets the name of the emoji.
 		/// </summary>
 		/// <value>
-		/// The name of the emoji. Can be null only in reaction emoji objects.
+		/// The name of the emoji. Can be <see langword="null"/> only in reaction emoji objects when custom emoji data is not available (for example, if it was deleted from the guild).
 		/// </value>
 		public string? Name { get; }
 

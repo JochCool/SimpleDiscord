@@ -1040,6 +1040,51 @@ namespace SimpleDiscord
 		}
 
 		/// <summary>
+		/// Creates a reaction for a message. Requires <c>READ_MESSAGE_HISTORY</c> permission, and if no one else has reacted to the message using this emoji, requires <c>ADD_REACTIONS</c> permission.
+		/// </summary>
+		/// <param name="channelId">The ID of the channel containing the message to react to.</param>
+		/// <param name="messageId">The ID of the message to react to.</param>
+		/// <param name="emoji">The emoji to add. For Unicode emoji, this is the string representation; for custom emoji, the format <c>name:id</c> is used.</param>
+		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
+		/// <exception cref="ArgumentNullException"><paramref name="channelId"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="channelId"/> is not a valid ID.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="messageId"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="messageId"/> is not a valid ID.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="emoji"/> is <see langword="null"/>.</exception>
+		protected async Task<DiscordRequestResult> CreateReaction(string channelId, string messageId, string emoji, CancellationToken cancellationToken = default)
+		{
+			Util.ThrowIfInvalidId(channelId, nameof(channelId));
+			Util.ThrowIfInvalidId(messageId, nameof(messageId));
+			if (emoji is null) throw new ArgumentNullException(nameof(emoji));
+
+			string endpoint = $"channels/{channelId}/messages/{{0}}/reactions/{{1}}/@me";
+
+			return await SendHttpRequest(HttpMethod.Put, endpoint, string.Format(endpoint, messageId, Uri.EscapeDataString(emoji)), cancellationToken: cancellationToken);
+		}
+
+		/// <param name="emoji">The emoji to add.</param>
+		/// <inheritdoc cref="CreateReaction(string, string, string, CancellationToken)"/>
+		/// <exception cref="ArgumentException"><paramref name="emoji"/> returns <see langword="null"/> for both <see cref="IEmoji.Id"/> and <see cref="IEmoji.Name"/>.</exception>
+		protected async Task<DiscordRequestResult> CreateReaction(string channelId, string messageId, IEmoji emoji, CancellationToken cancellationToken = default)
+		{
+			if (emoji is null) throw new ArgumentNullException(nameof(emoji));
+
+			string? emojiText = emoji.Id;
+			if (emojiText is null)
+			{
+				emojiText = emoji.Name;
+				if (emojiText is null) throw new ArgumentException(nameof(emoji) + " does not have a name or ID.", nameof(emoji));
+			}
+			else
+			{
+				emojiText = $"{emoji.Name}:{emojiText}";
+			}
+
+			return await CreateReaction(channelId, messageId, emojiText, cancellationToken);
+		}
+
+		/// <summary>
 		/// Creates a new channel in a guild. Requires the <c>MANAGE_CHANNELS</c> permission.
 		/// </summary>
 		/// <remarks>
