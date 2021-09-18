@@ -29,9 +29,9 @@ namespace SimpleDiscord
 		#region Static/constant fields
 
 		// Some limits defined by Discord
-		const int maxDiscordMessageLength = 2000;
-		const int maxChannelNameLength = 100;
-		const int maxChannelTopicLength = 1024;
+		public const int MaxDiscordMessageLength = 2000;
+		public const int MaxChannelNameLength = 100;
+		public const int MaxChannelTopicLength = 1024;
 
 		// Number of milliseconds to wait between sending stuff over the WebSocket connection.
 		// The actual ratelimit is 120 commands per minute instead of 1 per half a second, but this is easier to code and I don't need to send that much over the connection anyway.
@@ -937,9 +937,9 @@ namespace SimpleDiscord
 			{
 				if (embeds is null) throw new ArgumentException("Content and embeds are both null.");
 			}
-			else if (content.Length > maxDiscordMessageLength)
+			else if (content.Length > MaxDiscordMessageLength)
 			{
-				throw new ArgumentException("Message content cannot be longer than " + maxDiscordMessageLength + " characters.", nameof(content));
+				throw new ArgumentException("Message content cannot be longer than " + MaxDiscordMessageLength + " characters.", nameof(content));
 			}
 
 			ReadOnlyMemory<byte> bodyContent = Util.CreateJson(writer =>
@@ -1127,8 +1127,8 @@ namespace SimpleDiscord
 
 			if (name is null) throw new ArgumentNullException(nameof(name));
 			if (name.Length == 0) throw new ArgumentException("Channel name is an empty string.", nameof(name));
-			if (name.Length > maxChannelNameLength) throw new ArgumentException("Channel name is longer than " + maxChannelNameLength + " characters.", nameof(name));
-			if (topic is not null && topic.Length > maxChannelTopicLength) throw new ArgumentException("Channel topic is longer than " + maxChannelTopicLength + " characters.", nameof(topic));
+			if (name.Length > MaxChannelNameLength) throw new ArgumentException("Channel name is longer than " + MaxChannelNameLength + " characters.", nameof(name));
+			if (topic is not null && topic.Length > MaxChannelTopicLength) throw new ArgumentException("Channel topic is longer than " + MaxChannelTopicLength + " characters.", nameof(topic));
 
 			return await SendHttpRequest(HttpMethod.Post, $"guilds/{guildId}/channels", null, Util.CreateJson(writer =>
 			{
@@ -1173,7 +1173,7 @@ namespace SimpleDiscord
 			if (name is not null)
 			{
 				if (name.Length == 0) throw new ArgumentException("Channel name is an empty string.", nameof(name));
-				if (name.Length > maxChannelNameLength) throw new ArgumentException("Channel name is longer than " + maxChannelNameLength + " characters.", nameof(name));
+				if (name.Length > MaxChannelNameLength) throw new ArgumentException("Channel name is longer than " + MaxChannelNameLength + " characters.", nameof(name));
 			}
 
 			return await SendHttpRequest(HttpMethod.Patch, $"channels/{channelId}", null, Util.CreateJson(writer =>
