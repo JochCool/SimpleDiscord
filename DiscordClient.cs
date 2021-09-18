@@ -674,7 +674,7 @@ namespace SimpleDiscord
 				request.Content = new ReadOnlyMemoryContent((ReadOnlyMemory<byte>)content);
 				request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
 			}
-			if (reason is not null) request.Headers.Add("X-Audit-Log-Reason", reason);
+			if (reason is not null) request.Headers.Add("X-Audit-Log-Reason", Uri.EscapeDataString(reason));
 
 			try
 			{
