@@ -849,9 +849,10 @@ namespace SimpleDiscord
 					}
 
 #if DEBUG
-					Debug.Log($"Set a ratelimit bucket to: isDuplicate = {actualBucket.isDuplicate}, Limit = {actualBucket.limit}, Remaining = {actualBucket.remaining}, Reset = {actualBucket.reset}"); Debug.Log("Got response: " + response);
-
 					/*
+					Debug.Log($"Set a ratelimit bucket to: isDuplicate = {actualBucket.isDuplicate}, Limit = {actualBucket.limit}, Remaining = {actualBucket.remaining}, Reset = {actualBucket.reset}");
+					Debug.Log("Got response: " + response);
+
 					if (response.Content.Headers.ContentLength is > 0)
 					{
 						Debug.Log(" "+await response.Content.ReadAsStringAsync());
@@ -861,20 +862,6 @@ namespace SimpleDiscord
 					if (!response.IsSuccessStatusCode)
 					{
 						Debug.Log($"Received status code {(int)response.StatusCode} {response.ReasonPhrase} from {response.RequestMessage!.Method} {response.RequestMessage.RequestUri}");
-
-						/*
-						if (response.Content.Headers.ContentType is not null && response.Content.Headers.ContentType.MediaType == "application/json")
-						{
-							using JsonDocument error = JsonDocument.Parse(response.Content.ReadAsStream(CancellationToken.None));
-
-							Debug.Warn($" Error: {error.RootElement.GetProperty("code").GetRawText()} {error.RootElement.GetProperty("message").GetString()}");
-
-							if (error.RootElement.TryGetProperty("errors", out JsonElement errors))
-							{
-								Debug.Log(" " + errors.GetRawText());
-							}
-						}
-						//*/
 					}
 #endif
 				}
