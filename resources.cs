@@ -775,6 +775,45 @@ namespace SimpleDiscord
 		Number = 10
 	}
 
+	/// <summary>
+	/// Represents a command permission.
+	/// </summary>
+	public interface IApplicationCommandPermission
+	{
+		/// <summary>
+		/// Gets the ID of the role or user.
+		/// </summary>
+		/// <value>
+		/// The ID of the role or user.
+		/// </value>
+		string Id { get; }
+
+		/// <summary>
+		/// Gets a value indicating what this permission is for.
+		/// </summary>
+		/// <value>
+		/// The type of this command permission. This should be a defined value in the <see cref="ApplicationCommandPermissionType"/> enum.
+		/// </value>
+		ApplicationCommandPermissionType Type { get; }
+
+		/// <summary>
+		/// Gets a value indicating whether this role or user <em>can</em> or <em>cannot</em> use this command.
+		/// </summary>
+		/// <value>
+		/// <see langword="true"/> to allow the command for this role or user; <see langword="false"/> to disallow it.
+		/// </value>
+		bool Permission { get; }
+	}
+
+	/// <summary>
+	/// Represents the type of an application command permission, as defined in <see href="https://discord.com/developers/docs/interactions/application-commands#application-command-permissions-object-application-command-permission-type">Discord's documentation</see>.
+	/// </summary>
+	public enum ApplicationCommandPermissionType
+	{
+		Role = 1,
+		User = 2
+	}
+
 	#endregion
 
 	#region Interaction responses

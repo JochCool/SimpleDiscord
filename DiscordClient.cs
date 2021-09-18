@@ -1028,6 +1028,28 @@ namespace SimpleDiscord
 		}
 
 		/// <summary>
+		/// Unpins a message in a channel. Requires <c>MANAGE_MESSAGES</c> permission.
+		/// </summary>
+		/// <param name="channelId">The channel in which to unpin the message.</param>
+		/// <param name="messageId">The message to unpin.</param>
+		/// <param name="reason">The reason for unpinning the message.</param>
+		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
+		/// <exception cref="ArgumentNullException"><paramref name="channelId"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="channelId"/> is not a valid ID.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="messageId"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="messageId"/> is not a valid ID.</exception>
+		protected async Task<DiscordRequestResult> UnpinMessage(string channelId, string messageId, string? reason = null, CancellationToken cancellationToken = default)
+		{
+			Util.ThrowIfInvalidId(channelId, nameof(channelId));
+			Util.ThrowIfInvalidId(messageId, nameof(messageId));
+
+			string endpoint = $"channels/{channelId}/pins/{{0}}";
+
+			return await SendHttpRequest(HttpMethod.Delete, endpoint, string.Format(endpoint, messageId), null, reason, cancellationToken);
+		}
+
+		/// <summary>
 		/// Creates a reaction for a message. Requires <c>READ_MESSAGE_HISTORY</c> permission, and if no one else has reacted to the message using this emoji, requires <c>ADD_REACTIONS</c> permission.
 		/// </summary>
 		/// <param name="channelId">The ID of the channel containing the message to react to.</param>
@@ -1433,8 +1455,8 @@ namespace SimpleDiscord
 		/// <param name="interactionId">The ID of the interaction.</param>
 		/// <param name="interactionToken">The token of the interaction.</param>
 		/// <param name="content">The HTTP content to send to Discord.</param>
-		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
 		/// <exception cref="ArgumentNullException"><paramref name="interactionToken"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentNullException"><paramref name="interactionId"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentException"><paramref name="interactionId"/> is not a valid ID.</exception>
@@ -1449,6 +1471,38 @@ namespace SimpleDiscord
 
 			// this is not awaited because this method will be awaited in the other two overloads anyway
 			return SendHttpRequest(HttpMethod.Post, endpoint, string.Format(endpoint, interactionId, interactionToken), content, null, cancellationToken);
+		}
+
+		/// <summary>
+		/// Edits the initial interaction response.
+		/// </summary>
+		/// <param name="interactionToken">The token of the interaction.</param>
+		/// <param name="content">The new content of the message, or <see langword="null"/> to not edit the message's content.</param>
+		/// <param name="embeds">The new list of embeds of the message, or <see langword="null"/> to not edit the message's embeds.</param>
+		/// <param name="components">The new list of components of the message, or <see langword="null"/> to not edit the message's components.</param>
+		/// <param name="disallowMentions"><see langword="true"/> if all mentions in the message should be suppressed; otherwise, <see langword="false"/>.</param>
+		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
+		/// <exception cref="ArgumentNullException"><paramref name="interactionToken"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="interactionToken"/> is not a valid token.</exception>
+		protected async Task<DiscordRequestResult> EditOriginalInteractionResponse(
+			string interactionToken,
+			string? content = null,
+			IEnumerable<IEmbed>? embeds = null,
+			IEnumerable<IActionRowComponent>? components = null,
+			bool disallowMentions = false,
+			CancellationToken cancellationToken = default
+		)
+		{
+			if (interactionToken is null) throw new ArgumentNullException(nameof(interactionToken));
+			if (interactionToken.Length == 0) throw new ArgumentException("Interaction token is empty.", nameof(interactionToken));
+
+			const string endpoint = "webhooks/{0}/{1}/messages/@original";
+
+			return await SendHttpRequest(HttpMethod.Patch, endpoint, string.Format(endpoint, UserId, interactionToken), Util.CreateJson(writer =>
+			{
+				WriteMessageJson(writer, content, null, null, embeds, components, disallowMentions);
+			}), cancellationToken: cancellationToken);
 		}
 
 		/// <summary>
@@ -1534,7 +1588,6 @@ namespace SimpleDiscord
 		/// <param name="userId">The ID of the application/client. If not specified, the cached ID will be used. Must be specified if this client has not been connected yet.</param>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
 		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
-		/// <exception cref="ArgumentNullException"><paramref name="userId"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentException"><paramref name="userId"/> is not a valid ID.</exception>
 		/// <exception cref="InvalidOperationException">You have not connected the client at least once, or specified a user ID.</exception>
 		/// <exception cref="ArgumentNullException"><paramref name="guildId"/> is <see langword="null"/>.</exception>
@@ -1564,6 +1617,50 @@ namespace SimpleDiscord
 			string endpoint = guildId is null ? "applications/{0}/commands/{2}" :"applications/{0}/guilds/{1}/commands/{2}";
 
 			return await SendHttpRequest(HttpMethod.Delete, endpoint, string.Format(endpoint, userId, guildId, commandId), cancellationToken: cancellationToken);
+		}
+
+		/// <summary>
+		/// Edits command permissions for a specific command for your application in a guild. You can only add up to 10 permission overwrites for a command.
+		/// </summary>
+		/// <param name="guildId">The ID of the guild for the command permissions.</param>
+		/// <param name="commandId">The ID of the command to edit</param>
+		/// <param name="permissions">The permissions for the command in the guild.</param>
+		/// <param name="userId">The ID of the application/client. If not specified, the cached ID will be used. Must be specified if this client has not been connected yet.</param>
+		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
+		/// <exception cref="ArgumentNullException"><paramref name="permissions"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="userId"/> is not a valid ID.</exception>
+		/// <exception cref="InvalidOperationException">You have not connected the client at least once, or specified a user ID.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="guildId"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="guildId"/> is not a valid ID.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="commandId"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="commandId"/> is not a valid ID.</exception>
+		protected async Task<DiscordRequestResult> EditApplicationCommandPermissions(string? guildId, string? commandId, IEnumerable<IApplicationCommandPermission> permissions, string? userId = null, CancellationToken cancellationToken = default)
+		{
+			if (permissions is null) throw new ArgumentNullException(nameof(permissions));
+
+			Util.ThrowIfInvalidId(userId, nameof(userId), true);
+
+			userId ??= UserId ?? throw new InvalidOperationException("You must either have connected the client at least once, or specify a user ID.");
+
+			Util.ThrowIfInvalidId(guildId, nameof(guildId));
+			Util.ThrowIfInvalidId(commandId, nameof(commandId));
+
+			string endpoint = "applications/{0}/guilds/{1}/commands/{2}/permissions";
+
+			return await SendHttpRequest(HttpMethod.Put, endpoint, string.Format(endpoint, userId, guildId, commandId), Util.CreateJson(writer =>
+			{
+				writer.WriteStartArray("permissions");
+				foreach (IApplicationCommandPermission permission in permissions)
+				{
+					writer.WriteStartObject();
+					writer.WriteString("id", permission.Id);
+					writer.WriteNumber("type", (int)permission.Type);
+					writer.WriteBoolean("permission", permission.Permission);
+					writer.WriteEndObject();
+				}
+				writer.WriteEndArray();
+			}), cancellationToken: cancellationToken);
 		}
 
 		// Used in various HTTP requests to write message data
