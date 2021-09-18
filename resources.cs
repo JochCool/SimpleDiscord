@@ -259,6 +259,10 @@ namespace SimpleDiscord
 	/// <summary>
 	/// Represents one embed in a message.
 	/// </summary>
+	/// <remarks>
+	/// <para>In addition to per-property character limits, the combined character count of the <see cref="Title"/>, <see cref="Description"/>, <see cref="IEmbedField.Name"/>, <see cref="IEmbedField.Value"/>, <see cref="IEmbedFooter.Text"/> and <see cref="IEmbedAuthor.Name"/> properties must not exceed 6000 characters per embed.</para>
+	/// <para>Leading and trailing whitespace is trimmed automatically by Discord and not included in the character count.</para>
+	/// </remarks>
 	public interface IEmbed
 	{
 		/// <summary>
@@ -268,7 +272,7 @@ namespace SimpleDiscord
 		/// <para>The title may include Markdown formatting.</para>
 		/// </remarks>
 		/// <value>
-		/// The title of the embed.
+		/// The title of the embed; max 256 characters.
 		/// </value>
 		public string? Title { get; }
 
@@ -295,7 +299,7 @@ namespace SimpleDiscord
 		/// Gets the timestamp of the embed.
 		/// </summary>
 		/// <value>
-		/// The timestamp of the embed, in UTC.
+		/// The timestamp of the embed in UTC, or <see langword="null"/> to not display a timestamp.
 		/// </value>
 		public DateTime? Timestamp { get; }
 
@@ -349,7 +353,7 @@ namespace SimpleDiscord
 		/// Gets the fields of this embed.
 		/// </summary>
 		/// <value>
-		/// A collection of this embed's fields.
+		/// A collection of this embed's fields; max 25 elements.
 		/// </value>
 		public IEnumerable<IEmbedField>? Fields { get; }
 	}
@@ -377,7 +381,7 @@ namespace SimpleDiscord
 		/// Gets the name of the author.
 		/// </summary>
 		/// <value>
-		/// The name of the author.
+		/// The name of the author; max 256 characters.
 		/// </value>
 		public string? Name { get; }
 
@@ -399,7 +403,7 @@ namespace SimpleDiscord
 		/// Gets the text of the footer.
 		/// </summary>
 		/// <value>
-		/// The text of the footer.
+		/// The text of the footer; max 2048 characters.
 		/// </value>
 		public string Text { get; }
 	}
@@ -755,7 +759,7 @@ namespace SimpleDiscord
 	}
 
 	/// <summary>
-	/// Represents the type of an application command option, as defined in <see href="https://discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype">Discord's documentation</see>.
+	/// Represents the type of an application command option, as defined in <see href="https://discord.com/developers/docs/interactions/application-commands#application-command-object-application-command-option-type">Discord's documentation</see>.
 	/// </summary>
 	public enum ApplicationCommandOptionType
 	{

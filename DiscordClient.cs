@@ -905,7 +905,7 @@ namespace SimpleDiscord
 		/// <para>At least one of <paramref name="content"/> and <paramref name="embeds"/> must be specified.</para>
 		/// </remarks>
 		/// <param name="channelId">The ID of the channel.</param>
-		/// <param name="content">The content of the message to send.</param>
+		/// <param name="content">The content of the message to send. Maximum length is <see cref="MaxDiscordMessageLength"/>.</param>
 		/// <param name="referencedMessageId">If not <see langword="null"/>, the posted message will be a reply to the message ID.</param>
 		/// <param name="embeds">Lists the message's embeds.</param>
 		/// <param name="components">Lists the message components. Each subcollection represents one action row, and each element of that action row is a message component.</param>
@@ -963,10 +963,11 @@ namespace SimpleDiscord
 		/// </remarks>
 		/// <param name="channelId">The ID of the channel containing the message to edit.</param>
 		/// <param name="messageId">The ID of the message to edit.</param>
-		/// <param name="content">The new content of the message, or <see langword="null"/> to not edit the message's content.</param>
+		/// <param name="content">The new content of the message, or <see langword="null"/> to not edit the message's content. Maximum length is <see cref="MaxDiscordMessageLength"/>.</param>
 		/// <param name="embeds">The new list of embeds of the message, or <see langword="null"/> to not edit the message's embeds.</param>
 		/// <param name="components">The new list of components of the message, or <see langword="null"/> to not edit the message's components.</param>
 		/// <param name="flags">The new flags of the message, or <see langword="null"/> to not edit the message's flags. When specifying flags, ensure to include all previously set flags/bits in addition to ones that you are modifying. Currently, only <see cref="MessageFlags.SuppressEmbeds"/> can currently be set/unset.</param>
+		/// <param name="disallowMentions"><see langword="true"/> if all mentions in the message should be suppressed; otherwise, <see langword="false"/>.</param>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
 		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
 		/// <exception cref="ArgumentNullException"><paramref name="channelId"/> is <see langword="null"/>.</exception>
@@ -1092,9 +1093,9 @@ namespace SimpleDiscord
 		/// <para>Returns the new channel object on success. Fires a Channel Create Gateway event.</para>
 		/// </remarks>
 		/// <param name="guildId">The ID of the guild.</param>
-		/// <param name="name">The name of the channel (1-100 characters).</param>
+		/// <param name="name">The name of the channel. Maximum length is <see cref="MaxChannelNameLength"/>.</param>
 		/// <param name="channelType">The type of channel.</param>
-		/// <param name="topic">The topic of the channel (0-1024 characters)</param>
+		/// <param name="topic">The topic of the channel. Maximum length is <see cref="MaxChannelTopicLength"/>.</param>
 		/// <param name="parentId">ID of the parent category for a channel.</param>
 		/// <param name="position">The sorting position of the channel, with 0 being at the bottom.</param>
 		/// <param name="permissionOverwrites">The permission overwrites of the channel.</param>
@@ -1159,7 +1160,7 @@ namespace SimpleDiscord
 		/// Updates a channel's settings. Requires the <c>MANAGE_ROLES</c> permission for guild channels.
 		/// </summary>
 		/// <param name="channelId">The ID of the channel to modify.</param>
-		/// <param name="name">The new name of the channel, or <see langword="null"/> to leave the channel name unmodified.</param>
+		/// <param name="name">The new name of the channel, or <see langword="null"/> to leave the channel name unmodified. Maximum length is <see cref="MaxChannelNameLength"/>.</param>
 		/// <param name="reason">The reason to modifying the channel.</param>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
 		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
@@ -1396,10 +1397,11 @@ namespace SimpleDiscord
 		}
 
 		/// <param name="responseType">The response type to use.</param>
-		/// <param name="content">The content of the message to send or update, depending on the <paramref name="responseType"/>.</param>
+		/// <param name="content">The content of the message to send or update, depending on the <paramref name="responseType"/>. Maximum length is <see cref="MaxDiscordMessageLength"/>.</param>
 		/// <param name="isEphemeral">If <see langword="true"/>, the message will be ephemeral.</param>
 		/// <param name="embeds">Lists the message's embeds.</param>
 		/// <param name="components">Lists the message components. Each subcollection represents one action row, and each element of that action row is a message component.</param>
+		/// <param name="disallowMentions"><see langword="true"/> if all mentions in the message should be suppressed; otherwise, <see langword="false"/>.</param>
 		/// <param name="isTts"><see langword="true"/> if this should be a text to speech message; otherwise, <see langword="false"/>.</param>
 		/// <inheritdoc cref="RespondToInteraction(string, string, ReadOnlyMemory{byte}, CancellationToken)"/>
 		protected async Task<DiscordRequestResult> RespondToInteraction(
@@ -1444,12 +1446,12 @@ namespace SimpleDiscord
 		/// <param name="interactionId">The ID of the interaction.</param>
 		/// <param name="interactionToken">The token of the interaction.</param>
 		/// <param name="content">The HTTP content to send to Discord.</param>
+		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
 		/// <exception cref="ArgumentNullException"><paramref name="interactionToken"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentNullException"><paramref name="interactionId"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentException"><paramref name="interactionId"/> is not a valid ID.</exception>
 		/// <exception cref="ArgumentException"><paramref name="interactionToken"/> is not a valid token.</exception>
-		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
 		private Task<DiscordRequestResult> RespondToInteraction(string interactionId, string interactionToken, ReadOnlyMemory<byte> content, CancellationToken cancellationToken = default)
 		{
 			if (interactionToken is null) throw new ArgumentNullException(nameof(interactionToken));
