@@ -175,7 +175,7 @@ namespace SimpleDiscord
 			try
 			{
 				// Ensure that we have a gateway URL
-				Task? toAwait;
+				Task toAwait;
 				lock (gatewayLockObject)
 				{
 					if (gatewayFetchTask is not null)
@@ -185,12 +185,13 @@ namespace SimpleDiscord
 					else if (gatewayUrl is null || gatewayUrlExpires < DateTime.UtcNow)
 					{
 						// Fetch & cache the URL to connect to
-						toAwait = FetchGatewayUrl();
+						gatewayFetchTask = toAwait = FetchGatewayUrl();
 					}
-					else toAwait = null;
+					else goto Connect;
 				}
-				if (toAwait is not null) await toAwait;
+				await toAwait;
 
+			Connect:
 #if DEBUG
 				Debug.Log("Connecting...");
 #endif
