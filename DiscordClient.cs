@@ -1610,7 +1610,7 @@ namespace SimpleDiscord
 
 				if (embed.Author is not null)
 				{
-					writer.WriteStartObject();
+					writer.WriteStartObject("author");
 					if (embed.Author.Name is not null) writer.WriteString("name", embed.Author.Name);
 					if (embed.Author.Url is not null) writer.WriteString("url", embed.Author.Url);
 					if (embed.Author.IconUrl is not null) writer.WriteString("icon_url", embed.Author.IconUrl);
