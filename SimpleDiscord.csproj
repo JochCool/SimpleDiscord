@@ -2,20 +2,16 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<AssemblyName>SimpleDiscord</AssemblyName>
+		<RootNamespace>SimpleDiscord</RootNamespace>
 		<Version>0.1</Version>
 		<Nullable>enable</Nullable>
 
 		<Authors>JochCool</Authors>
-		<Description>A simple class library for connecting to a Discord bot.</Description>
+		<Description>A simple, bare-bones class library for connecting to a Discord bot.</Description>
+		<RepositoryUrl>https://github.com/JochCool/SimpleDiscord</RepositoryUrl>
 	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <DocumentationFile>C:\Users\JochCool\Documents\Personal\Programming\repos\SimpleDiscord\SimpleDiscord.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<ItemGroup>
-	  <None Include="..\.editorconfig" Link=".editorconfig" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="OneOf" Version="3.0.178" />

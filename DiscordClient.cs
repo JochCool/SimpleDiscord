@@ -305,6 +305,8 @@ namespace SimpleDiscord
 										writer.WriteNumber("intents", (int)Intents);
 										writer.WriteStartObject("properties");
 										writer.WriteString("$os", Environment.OSVersion.VersionString);
+										writer.WriteString("$browser", "SimpleDiscord");
+										writer.WriteString("$device", "SimpleDiscord"); // why does discord have two of the same properties???
 										writer.WriteEndObject();
 									}
 									else
