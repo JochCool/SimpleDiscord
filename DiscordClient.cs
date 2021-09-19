@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -151,6 +152,7 @@ namespace SimpleDiscord
 		/// <value>
 		/// <see langword="true"/> if this client is connected or connecting; otherwise, <see langword="false"/>.
 		/// </value>
+		[MemberNotNullWhen(true, nameof(webSocket))]
 		public bool IsConnected => webSocket is not null;
 
 		/// <summary>
@@ -593,7 +595,7 @@ namespace SimpleDiscord
 				Debug.Log("Sending: " + Encoding.UTF8.GetString(toSend.Span));
 #endif
 
-				sendingTask = client.webSocket!.SendAsync(toSend, WebSocketMessageType.Text, true, CancellationToken.None);
+				sendingTask = client.webSocket.SendAsync(toSend, WebSocketMessageType.Text, true, CancellationToken.None);
 			}
 
 			// The await keyword makes no functional difference, but code analysis told me to await it so whatever.
