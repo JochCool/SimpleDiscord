@@ -1,5 +1,7 @@
 ﻿namespace SimpleDiscord
 {
+	// Of course with *very* helpful documentation comments.
+
 	/// <summary>
 	/// This error code is sometimes returned from an HTTP request along with an HTTP status code.
 	/// </summary>
@@ -87,6 +89,16 @@
 		UnknownWebhook = 10015,
 
 		/// <summary>
+		/// Unknown webhook service.
+		/// </summary>
+		UnknownWebhookService = 10016,
+
+		/// <summary>
+		/// Unknown session.
+		/// </summary>
+		UnknownSession = 10020,
+
+		/// <summary>
 		/// Unknown ban.
 		/// </summary>
 		UnknownBan = 10026,
@@ -122,9 +134,29 @@
 		UnknownBranch = 10032,
 
 		/// <summary>
+		/// Unknown store directory layout.
+		/// </summary>
+		UnknownStoreDirectoryLayout = 10033,
+
+		/// <summary>
 		/// Unknown redistributable.
 		/// </summary>
 		UnknownRedistributable = 10036,
+
+		/// <summary>
+		/// Unknown gift code.
+		/// </summary>
+		UnknownGiftCode = 10038,
+
+		/// <summary>
+		/// Unknown stream.
+		/// </summary>
+		UnknownStream = 10049,
+
+		/// <summary>
+		/// Unknown premium server subscribe cooldown.
+		/// </summary>
+		UnknownPremiumServerSubscribeCooldown = 10050,
 
 		/// <summary>
 		/// Unknown guild template.
@@ -132,9 +164,54 @@
 		UnknownGuildTemplate = 10057,
 
 		/// <summary>
+		/// Unknown discoverable server category.
+		/// </summary>
+		UnknownDiscoverableServerCategory = 10059,
+
+		/// <summary>
+		/// Unknown sticker.
+		/// </summary>
+		UnknownSticker = 10060,
+
+		/// <summary>
+		/// Unknown interaction.
+		/// </summary>
+		UnknownInteraction = 10062,
+
+		/// <summary>
 		/// Unknown application command.
 		/// </summary>
 		UnknownApplicationCommand = 10063,
+
+		/// <summary>
+		/// Unknown application command permissions.
+		/// </summary>
+		UnknownApplicationCommandPermissions = 10066,
+
+		/// <summary>
+		/// Unknown stage instance.
+		/// </summary>
+		UnknownStageInstance = 10067,
+
+		/// <summary>
+		/// Unknown guild member verification form.
+		/// </summary>
+		UnknownGuildMemberVerificationForm = 10068,
+
+		/// <summary>
+		/// Unknown guild welcome screen.
+		/// </summary>
+		UnknownGuildWelcomeScreen = 10069,
+
+		/// <summary>
+		/// Unknown guild scheduled event.
+		/// </summary>
+		UnknownGuildScheduledEvent = 10070,
+
+		/// <summary>
+		/// Unknown guild scheduled event user.
+		/// </summary>
+		UnknownGuildScheduledEventUser = 10071,
 
 		/// <summary>
 		/// Bots cannot use this endpoint.
@@ -147,6 +224,26 @@
 		MustUseBot = 20002,
 
 		/// <summary>
+		/// Explicit content cannot be sent to the desired recipient(s).
+		/// </summary>
+		CannotSendExplicitContent = 20009,
+
+		/// <summary>
+		/// You are not authorized to perform this action on this application.
+		/// </summary>
+		UnauthorizedAction = 20012,
+
+		/// <summary>
+		/// This action cannot be performed due to slowmode rate limit.
+		/// </summary>
+		SlowmodeRatelimit = 20016,
+
+		/// <summary>
+		/// Only the owner of this account can perform this action.
+		/// </summary>
+		MustBeOwner = 20018,
+
+		/// <summary>
 		/// This message cannot be edited due to announcement rate limits.
 		/// </summary>
 		MessageEditRatelimit = 20022,
@@ -155,6 +252,16 @@
 		/// The channel you are writing has hit the write rate limit.
 		/// </summary>
 		ChannelRatelimit = 20028,
+
+		/// <summary>
+		/// Your stage topic, server name, server description, or channel names contain words that are not allowed.
+		/// </summary>
+		DisallowedWords = 20031,
+
+		/// <summary>
+		/// Guild premium subscription level too low.
+		/// </summary>
+		GuildPremiumSubscriptionLevel = 20035,
 
 		/// <summary>
 		/// Maximum number of guilds reached (100).
@@ -172,6 +279,11 @@
 		PinsLimit = 30003,
 
 		/// <summary>
+		/// Maximum number of recipients reached (10).
+		/// </summary>
+		RecipientsLimit = 30004,
+
+		/// <summary>
 		/// Maximum number of guild roles reached (250).
 		/// </summary>
 		GuildRoleLimit = 30005,
@@ -180,6 +292,11 @@
 		/// Maximum number of webhooks reached (10).
 		/// </summary>
 		WebhookLimit = 30007,
+
+		/// <summary>
+		/// Maximum number of emojis reached.
+		/// </summary>
+		EmojiLimit = 30008,
 
 		/// <summary>
 		/// Maximum number of reactions reached (20).
@@ -202,9 +319,54 @@
 		MessageInviteLimit = 30016,
 
 		/// <summary>
+		/// Maximum number of animated emojis reached.
+		/// </summary>
+		AnimatedEmojiLimit = 30018,
+
+		/// <summary>
+		/// Maximum number of server members reached.
+		/// </summary>
+		ServerMemberLimit = 30019,
+
+		/// <summary>
+		/// Maximum number of server categories has been reached (5).
+		/// </summary>
+		ServerCategoryLimit = 30030,
+
+		/// <summary>
 		/// Guild already has a template.
 		/// </summary>
 		GuildTemplateLimit = 30031,
+
+		/// <summary>
+		/// Maximum number of thread participants has been reached.
+		/// </summary>
+		ThreadParticipantLimit = 30033,
+
+		/// <summary>
+		/// Maximum number of bans for non-guild members have been exceeded.
+		/// </summary>
+		NonGuildMemberBanLimit = 30035,
+
+		/// <summary>
+		/// Maximum number of bans fetches has been reached.
+		/// </summary>
+		BansFetchLimit = 30037,
+
+		/// <summary>
+		/// Maximum number of stickers reached.
+		/// </summary>
+		StickerLimit = 30039,
+
+		/// <summary>
+		/// Maximum number of prune requests has been reached. Try again later.
+		/// </summary>
+		PruneRequestLimit = 30040,
+
+		/// <summary>
+		/// Maximum number of guild widget settings updates has been reached. Try again later.
+		/// </summary>
+		GuildWidgedSettingsUpdateLimit = 30042,
 
 		/// <summary>
 		/// Unauthorized. Provide a valid token and try again.
@@ -214,7 +376,12 @@
 		/// <summary>
 		/// You need to verify your account in order to perform this action.
 		/// </summary>
-		VerifyAccount = 40002,
+		UnverifiedAccount = 40002,
+
+		/// <summary>
+		/// You are opening direct messages too fast.
+		/// </summary>
+		DirectMessageRatelimit = 40003,
 
 		/// <summary>
 		/// Request entity too large. Try sending something smaller in size.
@@ -235,6 +402,11 @@
 		/// This message has already been crossposted.
 		/// </summary>
 		AlreadyCrossposted = 40033,
+
+		/// <summary>
+		/// An application command with that name already exists.
+		/// </summary>
+		DuplicateApplicationCommandName = 40041,
 
 		/// <summary>
 		/// Missing access.
@@ -342,9 +514,19 @@
 		InvalidOAuthToken = 50025,
 
 		/// <summary>
+		/// Missing required OAuth2 scope.
+		/// </summary>
+		MissingOAuthScope = 50026,
+
+		/// <summary>
 		/// Invalid webhook token provided.
 		/// </summary>
 		InvalidWebhookToken = 50027,
+
+		/// <summary>
+		/// Invalid role.
+		/// </summary>
+		InvalidRole = 50028,
 
 		/// <summary>
 		/// "Invalid Recipient(s)".
@@ -372,6 +554,26 @@
 		InvalidApiVersion = 50041,
 
 		/// <summary>
+		/// File uploaded exceeds the maximum size.
+		/// </summary>
+		FileTooLarge = 50045,
+
+		/// <summary>
+		/// Invalid file uploaded.
+		/// </summary>
+		InvalidFile = 50046,
+
+		/// <summary>
+		/// Cannot self-redeem this gift.
+		/// </summary>
+		CannotSelfRedeem = 50054,
+
+		/// <summary>
+		/// Payment source required to redeem gift.
+		/// </summary>
+		PaymentSourceRequired = 50070,
+
+		/// <summary>
 		/// Cannot delete a channel required for Community guilds.
 		/// </summary>
 		CannotDeleteChannel = 50074,
@@ -382,6 +584,46 @@
 		InvalidSticker = 50081,
 
 		/// <summary>
+		/// Tried to perform an operation on an archived thread, such as editing a message or adding a user to the thread.
+		/// </summary>
+		ThreadIsArchived = 50083,
+
+		/// <summary>
+		/// Invalid thread notification settings.
+		/// </summary>
+		InvalidThreadNotificationSettings = 50084,
+
+		/// <summary>
+		/// <c>before</c> value is earlier than the thread creation date.
+		/// </summary>
+		BeforeTooEarly = 50085,
+
+		/// <summary>
+		/// This server is not available in your location.
+		/// </summary>
+		ServerNotAvailable = 50095,
+
+		/// <summary>
+		/// This server needs monetization enabled in order to perform this action.
+		/// </summary>
+		MonetisationNotEnabled = 50097,
+
+		/// <summary>
+		/// Server needs more boosts.
+		/// </summary>
+		InsufficientBoosts = 50101,
+
+		/// <summary>
+		/// Two factor is required for this operation.
+		/// </summary>
+		TwoFactorAuthenitactionRequired = 60003,
+
+		/// <summary>
+		/// No users with DiscordTag exist.
+		/// </summary>
+		InvalidDiscordTag = 80004,
+
+		/// <summary>
 		/// Reaction was blocked.
 		/// </summary>
 		ReactionBlocked = 90001,
@@ -389,6 +631,71 @@
 		/// <summary>
 		/// API resource is currently overloaded. Try again a little later.
 		/// </summary>
-		ApiOverloaded = 130000
+		ApiOverloaded = 130000,
+
+		/// <summary>
+		/// The stage is already open.
+		/// </summary>
+		StageAlreadyOpen = 150006,
+
+		/// <summary>
+		/// Cannot reply without permission to read message history.
+		/// </summary>
+		MissingReadMessageHistoryPermission = 160002,
+
+		/// <summary>
+		/// A thread has already been created for this message.
+		/// </summary>
+		ThreadAlreadyCreated = 160004,
+
+		/// <summary>
+		/// Thread is locked.
+		/// </summary>
+		ThreadBlocked = 160005,
+
+		/// <summary>
+		/// Maximum number of active threads reached.
+		/// </summary>
+		ActiveThreadLimit = 160006,
+
+		/// <summary>
+		/// Maximum number of active announcement threads reached.
+		/// </summary>
+		ActiveAnnouncementThreadLimit = 160007,
+
+		/// <summary>
+		/// Invalid JSON for uploaded Lottie file.
+		/// </summary>
+		InvalidLottieFileJson = 170001,
+
+		/// <summary>
+		/// Uploaded Lotties cannot contain rasterized images such as PNG or JPEG.
+		/// </summary>
+		InvalidLottieFileType = 170002,
+
+		/// <summary>
+		/// Sticker maximum framerate exceeded.
+		/// </summary>
+		StickerFramerateLimit = 170003,
+
+		/// <summary>
+		/// Sticker frame count exceeds maximum of 1000 frames.
+		/// </summary>
+		StickerFrameCountLimit = 170004,
+
+		/// <summary>
+		/// Lottie animation maximum dimensions exceeded.
+		/// </summary>
+		LottieAnimationDimensionsLimit = 170005,
+
+		/// <summary>
+		/// Sticker frame rate is either too small or too large.
+		/// </summary>
+		StickerFramerate = 170006,
+
+		/// <summary>
+		/// Sticker animation duration exceeds maximum of 5 seconds.
+		/// </summary>
+		StickerAnimationDurationLimit = 170007
 	}
 }
