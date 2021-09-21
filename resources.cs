@@ -734,6 +734,14 @@ namespace SimpleDiscord
 		/// <see langword="true"/> if the parameter is required; <see langword="false"/> if the parameter is optional.
 		/// </value>
 		bool IsRequired { get; }
+
+		/// <summary>
+		/// Gets the channel types that this argument will be restricted to, if <see cref="Type"/> is <see cref="ApplicationCommandOptionType.Channel"/>.
+		/// </summary>
+		/// <value>
+		/// The allowed channel types for this command option. This should be <see langword="null"/> if <see cref="Type"/> is not <see cref="ApplicationCommandOptionType.Channel"/>, or if any channel type is allowed.
+		/// </value>
+		IEnumerable<ChannelType>? ChannelTypes { get; }
 	}
 
 	/// <summary>

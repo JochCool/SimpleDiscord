@@ -1565,7 +1565,7 @@ namespace SimpleDiscord
 
 				void WriteOneApplicationCommandOption(IApplicationCommandOption option)
 				{
-					if (option is null) throw new ArgumentNullException(nameof(commandOptions));
+					if (option is null) throw new ArgumentException("commandOptions contains a null value.");
 
 					writer.WriteNumber("type", (int)option.Type);
 					writer.WriteString("name", option.Name);
@@ -1582,6 +1582,17 @@ namespace SimpleDiscord
 					});
 
 					writer.WriteObjectArray("options", option.Options, WriteOneApplicationCommandOption);
+
+					IEnumerable<ChannelType>? channelTypes = option.ChannelTypes;
+					if (channelTypes is not null)
+					{
+						writer.WriteStartArray("channel_types");
+						foreach (ChannelType channelType in channelTypes)
+						{
+							writer.WriteNumberValue((int)channelType);
+						}
+						writer.WriteEndArray();
+					}
 				}
 			}), cancellationToken: cancellationToken);
 		}
