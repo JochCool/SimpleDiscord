@@ -728,6 +728,14 @@ namespace SimpleDiscord
 		IEnumerable<IApplicationCommandOptionChoice>? Choices { get; }
 
 		/// <summary>
+		/// Gets a value indicating whether this option should be autocompleted.
+		/// </summary>
+		/// <value>
+		/// <see langword="true"/> is autocompletion should be enabled; otherwise, <see langword="false"/>. If <see langword="true"/>, <see cref="Choices"/> should not be <see langword="null"/>.
+		/// </value>
+		bool HasAutocompletion { get; }
+
+		/// <summary>
 		/// Gets a value indicating whether the parameter is required or optional.
 		/// </summary>
 		/// <value>
@@ -761,7 +769,7 @@ namespace SimpleDiscord
 		/// Gets the value of the choice.
 		/// </summary>
 		/// <value>
-		/// The <see cref="string"/> or <see cref="int"/> that is the value of this choice. If it's a <see cref="string"/>, it should be up to 100 characters long.
+		/// The <see cref="string"/> or <see cref="int"/> that is the value of this choice. If it's a <see cref="string"/>, it should be up to 100 characters long. Only <see cref="string"/> is valid for autocomplete interactions.
 		/// </value>
 		OneOf<string, int> Value { get; }
 	}
@@ -882,7 +890,15 @@ namespace SimpleDiscord
 		/// <remarks>
 		/// <para>Only valid for component-based interactions.</para>
 		/// </remarks>
-		UpdateMessage = 7
+		UpdateMessage = 7,
+
+		/// <summary>
+		/// For autocomplete interactions.
+		/// </summary>
+		/// <remarks>
+		/// <para>Only valid for application-command-based interactions.</para>
+		/// </remarks>
+		ApplicationCommandAutocompleteResult = 8
 	}
 
 	#endregion

@@ -1570,7 +1570,8 @@ namespace SimpleDiscord
 					writer.WriteNumber("type", (int)option.Type);
 					writer.WriteString("name", option.Name);
 					writer.WriteString("description", option.Description);
-					if (option.IsRequired) writer.WriteBoolean("required", option.IsRequired);
+					if (option.IsRequired) writer.WriteBoolean("required", true);
+					if (option.HasAutocompletion) writer.WriteBoolean("autocomplete", true);
 
 					writer.WriteObjectArray("choices", option.Choices, choice =>
 					{
