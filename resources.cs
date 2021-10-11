@@ -723,7 +723,7 @@ namespace SimpleDiscord
 		/// <para>If these choices exist for an option, they are the only valid values for a user to pick.</para>
 		/// </remarks>
 		/// <value>
-		/// The choices for this command option. This should be <see langword="null"/> if <see cref="Type"/> is not <see cref="ApplicationCommandOptionType.String"/> or <see cref="ApplicationCommandOptionType.Integer"/>, or if any option is allowed.
+		/// The choices for this command option. This should be <see langword="null"/> if any option is allowed, if <see cref="Type"/> is not <see cref="ApplicationCommandOptionType.String"/> or <see cref="ApplicationCommandOptionType.Integer"/>, or if <see cref="HasAutocompletion"/> is <see langword="true"/>.
 		/// </value>
 		IEnumerable<IApplicationCommandOptionChoice>? Choices { get; }
 
@@ -731,7 +731,7 @@ namespace SimpleDiscord
 		/// Gets a value indicating whether this option should be autocompleted.
 		/// </summary>
 		/// <value>
-		/// <see langword="true"/> is autocompletion should be enabled; otherwise, <see langword="false"/>. If <see langword="true"/>, <see cref="Choices"/> should not be <see langword="null"/>.
+		/// <see langword="true"/> is autocompletion should be enabled; otherwise, <see langword="false"/>. If <see langword="true"/>, <see cref="Choices"/> should be <see langword="null"/>.
 		/// </value>
 		bool HasAutocompletion { get; }
 
@@ -772,6 +772,15 @@ namespace SimpleDiscord
 		/// The <see cref="string"/> or <see cref="int"/> that is the value of this choice. If it's a <see cref="string"/>, it should be up to 100 characters long. Only <see cref="string"/> is valid for autocomplete interactions.
 		/// </value>
 		OneOf<string, int> Value { get; }
+
+		internal static void WriteToJson(IApplicationCommandOptionChoice choice, Utf8JsonWriter writer)
+		{
+			writer.WriteString("name", choice.Name);
+
+			OneOf<string, int> value = choice.Value;
+			if (value.IsT0) writer.WriteString("value", value.AsT0);
+			else if (value.IsT1) writer.WriteNumber("value", value.AsT1);
+		}
 	}
 
 	/// <summary>
