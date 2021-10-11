@@ -901,7 +901,7 @@ namespace SimpleDiscord
 		/// <param name="referencedMessageId">If not <see langword="null"/>, the posted message will be a reply to the message ID.</param>
 		/// <param name="embeds">Lists the message's embeds.</param>
 		/// <param name="components">Lists the message components. Each subcollection represents one action row, and each element of that action row is a message component.</param>
-		/// <param name="disallowMentions"><see langword="true"/> if all mentions in the message should be suppressed; otherwise, <see langword="false"/>.</param>
+		/// <param name="allowedMentions">Indicates which users and roles are allowed to be mentioned by this message; <see langword="null"/> if all users and roles can be mentioned.</param>
 		/// <param name="isTts"><see langword="true"/> if this should be a text to speech message; otherwise, <see langword="false"/>.</param>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
 		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
@@ -910,14 +910,13 @@ namespace SimpleDiscord
 		/// <exception cref="ArgumentException"><paramref name="referencedMessageId"/> is not <see langword="null"/> and not a valid ID.</exception>
 		/// <exception cref="ArgumentException"><paramref name="content"/> and <paramref name="embeds"/> are both <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentException"><paramref name="content"/> is specified but longer than the maximum allowed.</exception>
-		/// <param name="isTts">If <see langword="true"/>, this will be a TTS message.</param>
 		protected async Task<DiscordRequestResult> SendChatMessage(
 			string channelId,
 			string? content,
 			string? referencedMessageId = null,
 			IEnumerable<IEmbed>? embeds = null,
 			IEnumerable<IActionRowComponent>? components = null,
-			bool disallowMentions = false,
+			IAllowedMentions? allowedMentions = null,
 			bool isTts = false,
 			CancellationToken cancellationToken = default
 		)
@@ -936,7 +935,7 @@ namespace SimpleDiscord
 
 			ReadOnlyMemory<byte> bodyContent = Util.CreateJson(writer =>
 			{
-				WriteMessageJson(writer, content, null, referencedMessageId, embeds, components, disallowMentions, isTts);
+				WriteMessageJson(writer, content, null, referencedMessageId, embeds, components, allowedMentions, isTts);
 			});
 
 #if DEBUG
@@ -959,7 +958,7 @@ namespace SimpleDiscord
 		/// <param name="embeds">The new list of embeds of the message, or <see langword="null"/> to not edit the message's embeds.</param>
 		/// <param name="components">The new list of components of the message, or <see langword="null"/> to not edit the message's components.</param>
 		/// <param name="flags">The new flags of the message, or <see langword="null"/> to not edit the message's flags. When specifying flags, ensure to include all previously set flags/bits in addition to ones that you are modifying. Currently, only <see cref="MessageFlags.SuppressEmbeds"/> can currently be set/unset.</param>
-		/// <param name="disallowMentions"><see langword="true"/> if all mentions in the message should be suppressed; otherwise, <see langword="false"/>.</param>
+		/// <param name="allowedMentions">Indicates which users and roles are allowed to be mentioned by this message; <see langword="null"/> if all users and roles can be mentioned.</param>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
 		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
 		/// <exception cref="ArgumentNullException"><paramref name="channelId"/> is <see langword="null"/>.</exception>
@@ -973,7 +972,7 @@ namespace SimpleDiscord
 			IEnumerable<IEmbed>? embeds = null,
 			IEnumerable<IActionRowComponent>? components = null,
 			MessageFlags? flags = null,
-			bool disallowMentions = false,
+			IAllowedMentions? allowedMentions = null,
 			CancellationToken cancellationToken = default
 		)
 		{
@@ -984,7 +983,7 @@ namespace SimpleDiscord
 
 			return await SendHttpRequest(HttpMethod.Patch, endpoint, string.Format(endpoint, messageId), Util.CreateJson(writer =>
 			{
-				WriteMessageJson(writer, content, flags, null, embeds, components, disallowMentions);
+				WriteMessageJson(writer, content, flags, null, embeds, components, allowedMentions);
 			}), cancellationToken: cancellationToken);
 		}
 
@@ -1415,7 +1414,7 @@ namespace SimpleDiscord
 		/// <param name="isEphemeral">If <see langword="true"/>, the message will be ephemeral.</param>
 		/// <param name="embeds">Lists the message's embeds.</param>
 		/// <param name="components">Lists the message components. Each subcollection represents one action row, and each element of that action row is a message component.</param>
-		/// <param name="disallowMentions"><see langword="true"/> if all mentions in the message should be suppressed; otherwise, <see langword="false"/>.</param>
+		/// <param name="allowedMentions">Indicates which users and roles are allowed to be mentioned by this message; <see langword="null"/> if all users and roles can be mentioned.</param>
 		/// <param name="isTts"><see langword="true"/> if this should be a text to speech message; otherwise, <see langword="false"/>.</param>
 		/// <inheritdoc cref="RespondToInteraction(string, string, ReadOnlyMemory{byte}, CancellationToken)"/>
 		protected async Task<DiscordRequestResult> RespondToInteraction(
@@ -1426,7 +1425,7 @@ namespace SimpleDiscord
 			bool isEphemeral = false,
 			IEnumerable<IEmbed>? embeds = null,
 			IEnumerable<IActionRowComponent>? components = null,
-			bool disallowMentions = false,
+			IAllowedMentions? allowedMentions = null,
 			bool isTts = false,
 			CancellationToken cancellationToken = default
 		)
@@ -1436,7 +1435,7 @@ namespace SimpleDiscord
 				writer.WriteNumber("type", (int)responseType);
 
 				writer.WriteStartObject("data");
-				WriteMessageJson(writer, content, isEphemeral ? MessageFlags.Ephemeral : MessageFlags.None, null, embeds, components, disallowMentions, isTts);
+				WriteMessageJson(writer, content, isEphemeral ? MessageFlags.Ephemeral : MessageFlags.None, null, embeds, components, allowedMentions, isTts);
 				writer.WriteEndObject();
 			}), cancellationToken);
 		}
@@ -1485,7 +1484,7 @@ namespace SimpleDiscord
 		/// <param name="content">The new content of the message, or <see langword="null"/> to not edit the message's content.</param>
 		/// <param name="embeds">The new list of embeds of the message, or <see langword="null"/> to not edit the message's embeds.</param>
 		/// <param name="components">The new list of components of the message, or <see langword="null"/> to not edit the message's components.</param>
-		/// <param name="disallowMentions"><see langword="true"/> if all mentions in the message should be suppressed; otherwise, <see langword="false"/>.</param>
+		/// <param name="allowedMentions">Indicates which users and roles are allowed to be mentioned by this message; <see langword="null"/> if all users and roles can be mentioned.</param>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
 		/// <returns>The result of the request. You must dispose this instance as soon as you have processed the result.</returns>
 		/// <exception cref="ArgumentNullException"><paramref name="interactionToken"/> is <see langword="null"/>.</exception>
@@ -1495,7 +1494,7 @@ namespace SimpleDiscord
 			string? content = null,
 			IEnumerable<IEmbed>? embeds = null,
 			IEnumerable<IActionRowComponent>? components = null,
-			bool disallowMentions = false,
+			IAllowedMentions? allowedMentions = null,
 			CancellationToken cancellationToken = default
 		)
 		{
@@ -1506,7 +1505,7 @@ namespace SimpleDiscord
 
 			return await SendHttpRequest(HttpMethod.Patch, endpoint, string.Format(endpoint, UserId, interactionToken), Util.CreateJson(writer =>
 			{
-				WriteMessageJson(writer, content, null, null, embeds, components, disallowMentions);
+				WriteMessageJson(writer, content, null, null, embeds, components, allowedMentions);
 			}), cancellationToken: cancellationToken);
 		}
 
@@ -1680,7 +1679,16 @@ namespace SimpleDiscord
 		}
 
 		// Used in various HTTP requests to write message data
-		private static void WriteMessageJson(Utf8JsonWriter writer, string? content, MessageFlags? flags, string? referencedMessageId, IEnumerable<IEmbed>? embeds, IEnumerable<IActionRowComponent>? components, bool disallowMentions = false, bool isTts = false)
+		private static void WriteMessageJson(
+			Utf8JsonWriter writer,
+			string? content,
+			MessageFlags? flags,
+			string? referencedMessageId,
+			IEnumerable<IEmbed>? embeds,
+			IEnumerable<IActionRowComponent>? components,
+			IAllowedMentions? allowedMentions,
+			bool isTts = false
+		)
 		{
 			// Create message JSON object
 			if (content is not null)
@@ -1805,11 +1813,24 @@ namespace SimpleDiscord
 				));
 			});
 
-			if (disallowMentions)
+			if (allowedMentions is not null)
 			{
 				writer.WriteStartObject("allowed_mentions");
+
+				IEnumerable<string>? userMentions = allowedMentions.AllowedUserMentions;
+				IEnumerable<string>? roleMentions = allowedMentions.AllowedRoleMentions;
+
 				writer.WriteStartArray("parse");
+				if (userMentions is null) writer.WriteStringValue("users");
+				if (roleMentions is null) writer.WriteStringValue("roles");
+				if (allowedMentions.AllowEveryoneMentions) writer.WriteStringValue("everyone");
 				writer.WriteEndArray();
+
+				writer.WriteStringArray("users", userMentions);
+				writer.WriteStringArray("roles", roleMentions);
+
+				if (allowedMentions.MentionRepliedUser) writer.WriteBoolean("replied_user", true);
+
 				writer.WriteEndObject();
 			}
 		}

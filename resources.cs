@@ -215,6 +215,44 @@ namespace SimpleDiscord
 		Loading = 1 << 7
 	}
 
+	/// <summary>
+	/// Controls what can be mentioned in a Discord message.
+	/// </summary>
+	public interface IAllowedMentions
+	{
+		/// <summary>
+		/// Gets a list indicating which users that can be mentioned by this message.
+		/// </summary>
+		/// <value>
+		/// The IDs of users that can be mentioned by this message; <see langword="null"/> if all users can be mentioned.
+		/// </value>
+		IEnumerable<string>? AllowedUserMentions { get; }
+
+		/// <summary>
+		/// Gets a list indicating which roles that can be mentioned by this message.
+		/// </summary>
+		/// <value>
+		/// The IDs of roles that can be mentioned by this message; <see langword="null"/> if all roles can be mentioned.
+		/// </value>
+		IEnumerable<string>? AllowedRoleMentions { get; }
+
+		/// <summary>
+		/// Gets a value indicating whether <c>@everyone</c> and <c>@here</c> can be mentioned by this message.
+		/// </summary>
+		/// <value>
+		/// <see langword="true"/> if <c>@everyone</c> and <c>@here</c> can be mentioned by this message; othewise <see langword="false"/>.
+		/// </value>
+		bool AllowEveryoneMentions { get; }
+
+		/// <summary>
+		/// Gets a value indicating whether this message can mention the author of the replied message, if this message is a reply.
+		/// </summary>
+		/// <value>
+		/// <see langword="true"/> if the author of the replied message can be mentioned by this message; othewise, <see langword="false"/>.
+		/// </value>
+		bool MentionRepliedUser { get; }
+	}
+
 	#endregion
 
 	#region Emoji
