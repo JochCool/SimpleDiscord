@@ -1440,8 +1440,29 @@ namespace SimpleDiscord
 			}), cancellationToken);
 		}
 
+		/// <param name="responseType">The response type to use.</param>
+		/// <param name="choices">Autocomplete choices; max 25 elements.</param>
+		/// <inheritdoc cref="RespondToInteraction(string, string, ReadOnlyMemory{byte}, CancellationToken)"/>
+		protected async Task<DiscordRequestResult> RespondToInteraction(
+			string interactionId,
+			string interactionToken,
+			InteractionResponseType responseType,
+			IEnumerable<IApplicationCommandOptionChoice> choices,
+			CancellationToken cancellationToken = default
+		)
+		{
+			return await RespondToInteraction(interactionId, interactionToken, Util.CreateJson(writer =>
+			{
+				writer.WriteNumber("type", (int)responseType);
+
+				writer.WriteStartObject("data");
+				writer.WriteObjectArray("choices", choices, choice => IApplicationCommandOptionChoice.WriteToJson(choice, writer));
+				writer.WriteEndObject();
+			}), cancellationToken);
+		}
+
 		/// <remarks>
-		/// <para>Some response types require a message to be sent, in which case, use the method <see cref="RespondToInteraction(string, string, InteractionResponseType, string?, bool, IEnumerable{IEmbed}?, IEnumerable{IActionRowComponent}?, bool, bool, CancellationToken)"/> instead.</para>
+		/// <para>Some response types require a message to be sent, in which case, use the method <see cref="RespondToInteraction(string, string, InteractionResponseType, string?, bool, IEnumerable{IEmbed}?, IEnumerable{IActionRowComponent}?, bool, bool, CancellationToken)"/> instead. Autocomplete responses require a list of choices to be included, in which case, use <see cref="RespondToInteraction(string, string, InteractionResponseType, IEnumerable{IApplicationCommandOptionChoice}, CancellationToken)"/> instead.</para>
 		/// </remarks>
 		/// <param name="responseType">The response type to use.</param>
 		/// <inheritdoc cref="RespondToInteraction(string, string, ReadOnlyMemory{byte}, CancellationToken)"/>
@@ -1569,16 +1590,10 @@ namespace SimpleDiscord
 					writer.WriteNumber("type", (int)option.Type);
 					writer.WriteString("name", option.Name);
 					writer.WriteString("description", option.Description);
-					if (option.IsRequired) writer.WriteBoolean("required", option.IsRequired);
+					if (option.IsRequired) writer.WriteBoolean("required", true);
+					if (option.HasAutocompletion) writer.WriteBoolean("autocomplete", true);
 
-					writer.WriteObjectArray("choices", option.Choices, choice =>
-					{
-						writer.WriteString("name", choice.Name);
-
-						OneOf<string, int> value = choice.Value;
-						if (value.IsT0) writer.WriteString("value", value.AsT0);
-						else if (value.IsT1) writer.WriteNumber("value", value.AsT1);
-					});
+					writer.WriteObjectArray("choices", option.Choices, choice => IApplicationCommandOptionChoice.WriteToJson(choice, writer));
 
 					writer.WriteObjectArray("options", option.Options, WriteOneApplicationCommandOption);
 
