@@ -9,6 +9,108 @@ namespace SimpleDiscord
 {
 	#region Channels and roles
 
+	public interface IChannel
+	{
+		/// <summary>
+		/// Gets the name of the channel. Maximum length is <see cref="MaxNameLength"/>
+		/// </summary>
+		/// <value>
+		/// The name of the channel.
+		/// </value>
+		string Name { get; }
+
+		/// <summary>
+		/// Gets the type of channel.
+		/// </summary>
+		/// <value>
+		/// The type of channel.
+		/// </value>
+		ChannelType Type { get; }
+
+		/// <summary>
+		/// Gets the channel topic. Maximum length is <see cref="MaxTopicLength"/>.
+		/// </summary>
+		/// <value>
+		/// The topic of the channel, or <see langword="null"/> if the channel does not have a topic.
+		/// </value>
+		string? Topic { get; }
+
+		/// <summary>
+		/// Gets the ID fo the parent category for this channel, or the ID of the text channel in which this thread was created.
+		/// </summary>
+		/// <value>
+		/// The <see cref="string"/> representation of the ID of the parent channel of this channel.
+		/// </value>
+		string? ParentId { get; }
+
+		/// <summary>
+		/// Gets the sorting position of this channel.
+		/// </summary>
+		/// <value>
+		/// The sorting position of this channel, with 0 being at the bottom.
+		/// </value>
+		int Position { get; }
+
+		/// <summary>
+		/// Gets the explicit permission overwrites for members and roles in this channel.
+		/// </summary>
+		/// <value>
+		/// The permission overwrites of this channel.
+		/// </value>
+		IEnumerable<IPermissionOverwrite> PermissionOverwrites { get; }
+
+		/// <summary>
+		/// Gets a value indicating whether this channel is NSFW.
+		/// </summary>
+		/// <value>
+		/// <see langword="true"/> is this channel is NSFW; otherwise, <see langword="false"/>.
+		/// </value>
+		bool IsNsfw { get; }
+
+		/// <summary>
+		/// Represents the maximum number of characters allowed by Discord in the <see cref="Name"/> field.
+		/// </summary>
+		public const int MaxNameLength = 100;
+
+		/// <summary>
+		/// Represents the maximum number of characters allowed by Discord in the <see cref="Topic"/> field.
+		/// </summary>
+		public const int MaxTopicLength = 1024;
+
+		public static readonly JsonEncodedText NameProperty = JsonEncodedText.Encode("name");
+		public static readonly JsonEncodedText TypeProperty = JsonEncodedText.Encode("type");
+		public static readonly JsonEncodedText TopicProperty = JsonEncodedText.Encode("topic");
+		public static readonly JsonEncodedText ParentIdProperty = JsonEncodedText.Encode("parent_id");
+		public static readonly JsonEncodedText PositionProperty = JsonEncodedText.Encode("position");
+		public static readonly JsonEncodedText PermissionOverwritesProperty = JsonEncodedText.Encode("permission_overwrites");
+		public static readonly JsonEncodedText IsNsfwProperty = JsonEncodedText.Encode("nsfw");
+
+		internal static void WriteToJson(IChannel channel, Utf8JsonWriter writer)
+		{
+			WriteToJson(writer, channel.Name, channel.Type, channel.Topic, channel.ParentId, channel.Position, channel.PermissionOverwrites, channel.IsNsfw);
+		}
+
+		internal static void WriteToJson(
+			Utf8JsonWriter writer,
+			string name,
+			ChannelType type,
+			string? topic = null,
+			string? parentId = null,
+			int position = 0,
+			IEnumerable<IPermissionOverwrite>? permissionOverwrites = null,
+			bool isNsfw = false
+		)
+		{
+			writer.WriteString(NameProperty, name);
+			writer.WriteNumber(TypeProperty, (int)type);
+			if (topic is not null) writer.WriteString(TopicProperty, topic);
+			if (parentId is not null) writer.WriteString(ParentIdProperty, parentId);
+			if (position != 0) writer.WriteNumber(PositionProperty, position);
+			if (isNsfw) writer.WriteBoolean(IsNsfwProperty, true);
+			writer.WriteObjectArray(PermissionOverwritesProperty, permissionOverwrites, IPermissionOverwrite.WriteToJson);
+		}
+	}
+
 	/// <summary>
 	/// Represents the type of a channel.
 	/// </summary>
@@ -115,6 +217,19 @@ namespace SimpleDiscord
 		/// The string representation of a <see cref="PermissionFlags"/> containing the denied permissions.
 		/// </value>
 		string Deny { get; }
+
+		public static readonly JsonEncodedText IdProperty = JsonEncodedText.Encode("id");
+		public static readonly JsonEncodedText TypeProperty = JsonEncodedText.Encode("type");
+		public static readonly JsonEncodedText AllowProperty = JsonEncodedText.Encode("allow");
+		public static readonly JsonEncodedText DenyProperty = JsonEncodedText.Encode("deny");
+
+		internal static void WriteToJson(IPermissionOverwrite overwrite, Utf8JsonWriter writer)
+		{
+			writer.WriteString(IdProperty, overwrite.Id);
+			writer.WriteNumber(TypeProperty, (int)overwrite.Type);
+			writer.WriteString(AllowProperty, overwrite.Allow);
+			writer.WriteString(DenyProperty, overwrite.Deny);
+		}
 	}
 
 	/// <summary>
@@ -131,6 +246,85 @@ namespace SimpleDiscord
 		/// Indicates that a permission overwrite is for a guild member.
 		/// </summary>
 		Member
+	}
+
+	interface IDm
+	{
+		/// <summary>
+		/// Gets the ID of the recipient of this DM.
+		/// </summary>
+		/// <value>
+		/// A <see cref="string"/> representing the ID of the user that is the recipient of this DM.
+		/// </value>
+		string RecipientId { get; }
+
+		public static readonly JsonEncodedText RecipientIdProperty = JsonEncodedText.Encode("recipient_id");
+	}
+
+	/// <summary>
+	/// Represents a role on Discord.
+	/// </summary>
+	public interface IRole
+	{
+		/// <summary>
+		/// Gets the name of this role.
+		/// </summary>
+		/// <value>
+		/// The name of this role.
+		/// </value>
+		string? Name { get; }
+
+		/// <summary>
+		/// Gets the permissions enabled for this role.
+		/// </summary>
+		/// <value>
+		/// The <see cref="string"/> representation of the bitwise value of the enabled permissions.
+		/// </value>
+		string? Permissions { get; }
+
+		/// <summary>
+		/// Gets the colour of this role.
+		/// </summary>
+		/// <value>
+		/// The RGB colour value, or 0 for a role without colour.
+		/// </value>
+		int Colour { get; }
+
+		/// <summary>
+		/// Gets a value indicating whether this role is be pinned in the user listing.
+		/// </summary>
+		/// <value>
+		/// <see langword="true"/> if this role should be pinned in the user listing; otherwise, <see langword="false"/>.
+		/// </value>
+		bool IsHoisted { get; }
+
+		/// <summary>
+		/// Gets a value indicating whether this role is mentionable.
+		/// </summary>
+		/// <value>
+		/// <see langword="true"/> if this role should be mentionable; otherwise, <see langword="false"/>.
+		/// </value>
+		bool IsMentionable { get; }
+
+		public static readonly JsonEncodedText NameProperty = JsonEncodedText.Encode("name");
+		public static readonly JsonEncodedText PermissionsProperty = JsonEncodedText.Encode("permissions");
+		public static readonly JsonEncodedText ColourProperty = JsonEncodedText.Encode("color");
+		public static readonly JsonEncodedText IsHoistedProperty = JsonEncodedText.Encode("hoist");
+		public static readonly JsonEncodedText IsMentionableProperty = JsonEncodedText.Encode("mentionable");
+
+		internal static void WriteToJson(IRole role, Utf8JsonWriter writer)
+		{
+			WriteToJson(writer, role.Name, role.Permissions, role.Colour, role.IsHoisted, role.IsMentionable);
+		}
+
+		internal static void WriteToJson(Utf8JsonWriter writer, string? name = null, string? permissions = null, int? colour = null, bool? isHoisted = null, bool? isMentionable = null)
+		{
+			if (name is not null) writer.WriteString(NameProperty, name);
+			if (permissions is not null) writer.WriteString(PermissionsProperty, permissions);
+			if (colour is not null) writer.WriteNumber(ColourProperty, (int)colour);
+			if (isHoisted is not null) writer.WriteBoolean(IsHoistedProperty, (bool)isHoisted);
+			if (isMentionable is not null) writer.WriteBoolean(IsMentionableProperty, (bool)isMentionable);
+		}
 	}
 
 	/// <summary>
@@ -189,7 +383,7 @@ namespace SimpleDiscord
 		/// <value>
 		/// The ID of the role.
 		/// </value>
-		public string Id { get; }
+		string Id { get; }
 
 		/// <summary>
 		/// Gets the position of the role.
@@ -197,7 +391,130 @@ namespace SimpleDiscord
 		/// <value>
 		/// The position of the role.
 		/// </value>
-		public int Position { get; }
+		int Position { get; }
+
+		public static readonly JsonEncodedText IdProperty = JsonEncodedText.Encode("id");
+		public static readonly JsonEncodedText PositionProperty = JsonEncodedText.Encode("position");
+
+		internal static void WriteToJson(IRolePosition position, Utf8JsonWriter writer)
+		{
+			writer.WriteString(IdProperty, position.Id);
+			writer.WriteNumber(PositionProperty, position.Position);
+		}
+	}
+
+	/// <summary>
+	/// Represents a message on Discord.
+	/// </summary>
+	/// <remarks>
+	/// <para>This interface is incomplete and will likely be changed in the future.</para>
+	/// </remarks>
+	public interface IMessage
+	{
+		/// <summary>
+		/// Gets the content of the message. Maximum length is <see cref="MaxContentLength"/>.
+		/// </summary>
+		/// <value>
+		/// A <see cref="string"/> representing the content of the message, or <see langword="null"/> if this message has no content.
+		/// </value>
+		string? Content { get; }
+
+		/// <summary>
+		/// Gets the ID of the message that this message is a reply to.
+		/// </summary>
+		/// <value>
+		/// The <see cref="string"/> representation of the ID of the replied message, or <see langword="null"/> if this message is not a reply.
+		/// </value>
+		string? ReferencedMessage { get; }
+
+		/// <summary>
+		/// Gets the embeds of this message.
+		/// </summary>
+		/// <value>
+		/// The embeds of this message.
+		/// </value>
+		IEnumerable<IEmbed> Embeds { get; }
+
+		/// <summary>
+		/// Gets the components of this message.
+		/// </summary>
+		/// <value>
+		/// The components of this message. Each subcollection represents one action row, and each element of that action row is a message component.
+		/// </value>
+		IEnumerable<IActionRowComponent> Components { get; }
+
+		/// <summary>
+		/// Gets the allowed mentions for this message.
+		/// </summary>
+		/// <value>
+		/// The allowed mentions for this message, or <see langword="null"/> if all mentions are allowed.
+		/// </value>
+		IAllowedMentions? AllowedMentions { get; }
+
+		/// <summary>
+		/// Gets a value indicating whether this is a text to speech message.
+		/// </summary>
+		/// <value>
+		/// <see langword="true"/> if this should be a text to speech message; otherwise, <see langword="false"/>.
+		/// </value>
+		bool IsTts { get; }
+
+		/// <summary>
+		/// Represents the maximum number of characters allowed by Discord in the <see cref="Content"/> field.
+		/// </summary>
+		public const int MaxContentLength = 2000;
+
+		public static readonly JsonEncodedText ContentProperty = JsonEncodedText.Encode("content");
+		public static readonly JsonEncodedText FlagsProperty = JsonEncodedText.Encode("flags");
+		public static readonly JsonEncodedText ReferencedMessageProperty = JsonEncodedText.Encode("message_reference");
+		public static readonly JsonEncodedText EmbedsProperty = JsonEncodedText.Encode("embeds");
+		public static readonly JsonEncodedText ComponentsProperty = JsonEncodedText.Encode("components");
+		public static readonly JsonEncodedText AllowedMentionsProperty = JsonEncodedText.Encode("allowed_mentions");
+		public static readonly JsonEncodedText IsTtsProperty = JsonEncodedText.Encode("tts");
+
+		internal static void WriteToJson(IMessage message, Utf8JsonWriter writer)
+		{
+			WriteToJson(writer, message.Content, null, message.ReferencedMessage, message.Embeds, message.Components, message.AllowedMentions, message.IsTts);
+		}
+
+		internal static void WriteToJson(
+			Utf8JsonWriter writer,
+			string? content,
+			MessageFlags? flags,
+			string? referencedMessageId,
+			IEnumerable<IEmbed>? embeds,
+			IEnumerable<IActionRowComponent>? components,
+			IAllowedMentions? allowedMentions,
+			bool isTts = false
+		)
+		{
+			if (content is not null)
+			{
+				writer.WriteString(ContentProperty, content);
+			}
+			if (flags is not null)
+			{
+				writer.WriteNumber(FlagsProperty, (int)flags);
+			}
+			if (referencedMessageId is not null)
+			{
+				writer.WriteString(ReferencedMessageProperty, referencedMessageId);
+			}
+			if (isTts)
+			{
+				writer.WriteBoolean(IsTtsProperty, true);
+			}
+
+			writer.WriteObjectArray(EmbedsProperty, embeds, IEmbed.WriteToJson);
+			writer.WriteObjectArray(ComponentsProperty, components, IActionRowComponent.WriteToJson);
+
+			if (allowedMentions is not null)
+			{
+				writer.WriteStartObject(AllowedMentionsProperty);
+				IAllowedMentions.WriteToJson(allowedMentions, writer);
+				writer.WriteEndObject();
+			}
+		}
 	}
 
 	// https://discord.com/developers/docs/resources/channel#message-object-message-flags
@@ -251,6 +568,31 @@ namespace SimpleDiscord
 		/// <see langword="true"/> if the author of the replied message can be mentioned by this message; othewise, <see langword="false"/>.
 		/// </value>
 		bool MentionRepliedUser { get; }
+
+		public static readonly JsonEncodedText AllowedUserMentionsProperty = JsonEncodedText.Encode("users");
+		public static readonly JsonEncodedText AllowedRoleMentionsProperty = JsonEncodedText.Encode("roles");
+		public static readonly JsonEncodedText MentionRepliedUserProperty = JsonEncodedText.Encode("replied_user");
+		public static readonly JsonEncodedText ParseProperty = JsonEncodedText.Encode("parse");
+		public static readonly JsonEncodedText AllowAllUserMentionsValue = JsonEncodedText.Encode("users");
+		public static readonly JsonEncodedText AllowAllRoleMentionsValue = JsonEncodedText.Encode("roles");
+		public static readonly JsonEncodedText AllowEveryoneMentionsValue = JsonEncodedText.Encode("everyone");
+
+		internal static void WriteToJson(IAllowedMentions allowedMentions, Utf8JsonWriter writer)
+		{
+			IEnumerable<string>? userMentions = allowedMentions.AllowedUserMentions;
+			IEnumerable<string>? roleMentions = allowedMentions.AllowedRoleMentions;
+
+			writer.WriteStartArray(ParseProperty);
+			if (userMentions is null) writer.WriteStringValue(AllowAllUserMentionsValue);
+			if (roleMentions is null) writer.WriteStringValue(AllowAllRoleMentionsValue);
+			if (allowedMentions.AllowEveryoneMentions) writer.WriteStringValue(AllowEveryoneMentionsValue);
+			writer.WriteEndArray();
+
+			writer.WriteStringArray(AllowedUserMentionsProperty, userMentions);
+			writer.WriteStringArray(AllowedRoleMentionsProperty, roleMentions);
+
+			if (allowedMentions.MentionRepliedUser) writer.WriteBoolean(MentionRepliedUserProperty, true);
+		}
 	}
 
 	#endregion
@@ -288,6 +630,17 @@ namespace SimpleDiscord
 		/// <see langword="true"/> if this emoji is animated; otherwise, <see langword="false"/>.
 		/// </value>
 		public bool IsAnimated { get; }
+
+		public static readonly JsonEncodedText IdProperty = JsonEncodedText.Encode("id");
+		public static readonly JsonEncodedText NameProperty = JsonEncodedText.Encode("name");
+		public static readonly JsonEncodedText IsAnimatedProperty = JsonEncodedText.Encode("animated");
+
+		internal static void WriteToJson(IEmoji emoji, Utf8JsonWriter writer)
+		{
+			writer.WriteString(IdProperty, emoji.Id);
+			writer.WriteString(NameProperty, emoji.Name);
+			if (emoji.IsAnimated) writer.WriteBoolean(IsAnimatedProperty, true);
+		}
 	}
 
 	#endregion
@@ -394,6 +747,82 @@ namespace SimpleDiscord
 		/// A collection of this embed's fields; max 25 elements.
 		/// </value>
 		public IEnumerable<IEmbedField>? Fields { get; }
+
+		internal static readonly JsonEncodedText TypeProperty = JsonEncodedText.Encode("type");
+		internal static readonly JsonEncodedText RichTypeValue = JsonEncodedText.Encode("rich");
+		public static readonly JsonEncodedText TitleProperty = JsonEncodedText.Encode("title");
+		public static readonly JsonEncodedText DescriptionProperty = JsonEncodedText.Encode("description");
+		public static readonly JsonEncodedText UrlProperty = JsonEncodedText.Encode("url");
+		public static readonly JsonEncodedText TimestampProperty = JsonEncodedText.Encode("timestamp");
+		public static readonly JsonEncodedText ColourProperty = JsonEncodedText.Encode("color");
+		public static readonly JsonEncodedText FooterProperty = JsonEncodedText.Encode("footer");
+		public static readonly JsonEncodedText ImageProperty = JsonEncodedText.Encode("image");
+		public static readonly JsonEncodedText ImageUrlProperty = JsonEncodedText.Encode("url");
+		public static readonly JsonEncodedText ThumbnailProperty = JsonEncodedText.Encode("thumbnail");
+		public static readonly JsonEncodedText ThumbnailUrlProperty = JsonEncodedText.Encode("url");
+		public static readonly JsonEncodedText AuthorProperty = JsonEncodedText.Encode("author");
+		public static readonly JsonEncodedText FieldsProperty = JsonEncodedText.Encode("fields");
+
+		internal static void WriteToJson(IEmbed embed, Utf8JsonWriter writer)
+		{
+			WriteToJson(writer, embed.Title, embed.Description, embed.Url, embed.Timestamp, embed.Colour, embed.Author, embed.ImageUrl, embed.ThumbnailUrl, embed.Fields, embed.Footer);
+		}
+
+		internal static void WriteToJson(
+			Utf8JsonWriter writer,
+			string? title = null,
+			string? description = null,
+			string? url = null,
+			DateTime? timestamp = null,
+			int colour = 0,
+			IEmbedAuthor? author = null,
+			string? imageUrl = null,
+			string? thumbnailUrl = null,
+			IEnumerable<IEmbedField>? fields = null,
+			IEmbedFooter? footer = null
+		)
+		{
+			writer.WriteString(TypeProperty, RichTypeValue);
+
+			if (title is not null) writer.WriteString(TitleProperty, title);
+			if (description is not null) writer.WriteString(DescriptionProperty, description);
+			if (url is not null) writer.WriteString(UrlProperty, url);
+			if (timestamp is not null) writer.WriteString(TimestampProperty, ((DateTime)timestamp).ToString("o"));
+			if (colour != 0) writer.WriteNumber(ColourProperty, colour);
+
+			if (author is not null)
+			{
+				writer.WriteStartObject(AuthorProperty);
+				IEmbedAuthor.WriteToJson(author, writer);
+				writer.WriteEndObject();
+			}
+
+			if (imageUrl is not null)
+			{
+				writer.WriteStartObject(ImageProperty);
+				writer.WriteString(ImageUrlProperty, imageUrl);
+				writer.WriteEndObject();
+			}
+
+			if (thumbnailUrl is not null)
+			{
+				writer.WriteStartObject(ThumbnailProperty);
+				writer.WriteString(ThumbnailUrlProperty, thumbnailUrl);
+				writer.WriteEndObject();
+			}
+
+			if (fields is not null)
+			{
+				writer.WriteObjectArray(FieldsProperty, fields, IEmbedField.WriteToJson);
+			}
+
+			if (footer is not null)
+			{
+				writer.WriteStartObject(FooterProperty);
+				IEmbedFooter.WriteToJson(footer, writer);
+				writer.WriteEndObject();
+			}
+		}
 	}
 
 	public interface IHasIcon
@@ -408,6 +837,17 @@ namespace SimpleDiscord
 		/// The URL of the icon.
 		/// </value>
 		public string? IconUrl { get; }
+
+		public static readonly JsonEncodedText IconUrlProperty = JsonEncodedText.Encode("icon_url");
+
+		internal static void WriteToJson(IHasIcon icon, Utf8JsonWriter writer)
+		{
+			string? iconUrl = icon.IconUrl;
+			if (iconUrl is not null)
+			{
+				writer.WriteString(IconUrlProperty, iconUrl);
+			}
+		}
 	}
 
 	/// <summary>
@@ -430,6 +870,24 @@ namespace SimpleDiscord
 		/// The URL of the author.
 		/// </value>
 		public string? Url { get; }
+
+		public static readonly JsonEncodedText NameProperty = JsonEncodedText.Encode("name");
+		public static readonly JsonEncodedText UrlProperty = JsonEncodedText.Encode("url");
+
+		internal static void WriteToJson(IEmbedAuthor author, Utf8JsonWriter writer)
+		{
+			string? name = author.Name;
+			if (name is not null)
+			{
+				writer.WriteString(NameProperty, name);
+			}
+			string? url = author.Url;
+			if (url is not null)
+			{
+				writer.WriteString(UrlProperty, url);
+			}
+			IHasIcon.WriteToJson(author, writer);
+		}
 	}
 
 	/// <summary>
@@ -444,6 +902,14 @@ namespace SimpleDiscord
 		/// The text of the footer; max 2048 characters.
 		/// </value>
 		public string Text { get; }
+
+		public static readonly JsonEncodedText TextProperty = JsonEncodedText.Encode("text");
+
+		internal static void WriteToJson(IEmbedFooter footer, Utf8JsonWriter writer)
+		{
+			writer.WriteString(TextProperty, footer.Text);
+			IHasIcon.WriteToJson(footer, writer);
+		}
 	}
 
 	public interface IEmbedField
@@ -477,6 +943,17 @@ namespace SimpleDiscord
 		/// <see langword="true"/> if this field should display inline; otherwise, <see langword="false"/>.
 		/// </value>
 		public bool IsInline { get; }
+
+		public static readonly JsonEncodedText NameProperty = JsonEncodedText.Encode("name");
+		public static readonly JsonEncodedText ValueProperty = JsonEncodedText.Encode("value");
+		public static readonly JsonEncodedText IsInlineProperty = JsonEncodedText.Encode("inline");
+
+		internal static void WriteToJson(IEmbedField field, Utf8JsonWriter writer)
+		{
+			writer.WriteString(NameProperty, field.Name);
+			writer.WriteString(ValueProperty, field.Value);
+			if (field.IsInline) writer.WriteBoolean(IsInlineProperty, true);
+		}
 	}
 
 	#endregion
@@ -484,14 +961,38 @@ namespace SimpleDiscord
 	#region Message components
 
 	/// <summary>
+	/// Represents any component.
+	/// </summary>
+	/// <remarks>
+	/// <para>This interface currently does not have any members.</para>
+	/// </remarks>
+	public interface IComponent
+	{
+		internal static readonly JsonEncodedText TypeProperty = JsonEncodedText.Encode("type");
+	}
+
+	/// <summary>
 	/// Represents an action row component (component type 1).
 	/// </summary>
-	public interface IActionRowComponent
+	public interface IActionRowComponent : IComponent
 	{
 		/// <summary>
 		/// Gets the components in this action row.
 		/// </summary>
 		IEnumerable<OneOf<IInteractionButtonComponent, ILinkButtonComponent, ISelectMenuComponent>> Components { get; }
+
+		public static readonly JsonEncodedText ComponentsProperty = JsonEncodedText.Encode("components");
+
+		internal static void WriteToJson(IActionRowComponent actionRow, Utf8JsonWriter writer)
+		{
+			writer.WriteNumber(TypeProperty, 1);
+
+			writer.WriteObjectArray(ComponentsProperty, actionRow.Components, (component, writer) => component.Switch(
+				component => IInteractionButtonComponent.WriteToJson(component, writer),
+				component => ILinkButtonComponent.WriteToJson(component, writer),
+				component => ISelectMenuComponent.WriteToJson(component, writer)
+			));
+		}
 	}
 
 	/// <summary>
@@ -506,6 +1007,13 @@ namespace SimpleDiscord
 		/// A developer-defined identifier for the button; max 100 characters.
 		/// </value>
 		string CustomId { get; }
+
+		public static readonly JsonEncodedText CustomIdProperty = JsonEncodedText.Encode("custom_id");
+
+		internal static void WriteToJson(IInteractionComponent component, Utf8JsonWriter writer)
+		{
+			writer.WriteString(CustomIdProperty, component.CustomId);
+		}
 	}
 
 	/// <summary>
@@ -520,6 +1028,16 @@ namespace SimpleDiscord
 		/// <see langword="true"/> if the component is disabled; otherwise, <see langword="false"/>.
 		/// </value>
 		bool IsDisabled { get; }
+
+		public static readonly JsonEncodedText IsDisabledProperty = JsonEncodedText.Encode("disabled");
+
+		internal static void WriteToJson(IDisableableComponent component, Utf8JsonWriter writer)
+		{
+			if (component.IsDisabled)
+			{
+				writer.WriteBoolean(IsDisabledProperty, true);
+			}
+		}
 	}
 
 	/// <summary>
@@ -543,17 +1061,18 @@ namespace SimpleDiscord
 		/// </value>
 		IEmoji? Emoji { get; }
 
+		public static readonly JsonEncodedText LabelProperty = JsonEncodedText.Encode("label");
+		public static readonly JsonEncodedText EmojiProperty = JsonEncodedText.Encode("emoji");
+
 		internal static void WriteToJson(ILabeledElement element, Utf8JsonWriter writer)
 		{
-			writer.WriteString("label", element.Label);
+			writer.WriteString(LabelProperty, element.Label);
 
 			IEmoji? emoji = element.Emoji;
 			if (emoji is not null)
 			{
-				writer.WriteStartObject("emoji");
-				writer.WriteString("id", emoji.Id);
-				writer.WriteString("name", emoji.Name);
-				if (emoji.IsAnimated) writer.WriteBoolean("animated", true);
+				writer.WriteStartObject(EmojiProperty);
+				IEmoji.WriteToJson(emoji, writer);
 				writer.WriteEndObject();
 			}
 		}
@@ -562,8 +1081,14 @@ namespace SimpleDiscord
 	/// <summary>
 	/// Represents a button message component (component type 2).
 	/// </summary>
-	public interface IButtonComponent : ILabeledElement, IDisableableComponent
+	public interface IButtonComponent : IComponent, ILabeledElement, IDisableableComponent
 	{
+		internal static void WriteToJson(IButtonComponent component, Utf8JsonWriter writer)
+		{
+			writer.WriteNumber(TypeProperty, 2);
+			ILabeledElement.WriteToJson(component, writer);
+			IDisableableComponent.WriteToJson(component, writer);
+		}
 	}
 
 	/// <summary>
@@ -578,6 +1103,15 @@ namespace SimpleDiscord
 		/// Any valid <see cref="ButtonComponentStyle"/> value, other than <see cref="ButtonComponentStyle.Link"/> (for link button components, use <see cref="ILinkButtonComponent"/> instead).
 		/// </value>
 		ButtonComponentStyle Style { get; }
+
+		public static readonly JsonEncodedText StyleProperty = JsonEncodedText.Encode("style");
+
+		internal static void WriteToJson(IInteractionButtonComponent component, Utf8JsonWriter writer)
+		{
+			IButtonComponent.WriteToJson(component, writer);
+			IInteractionComponent.WriteToJson(component, writer);
+			writer.WriteNumber(StyleProperty, (int)component.Style);
+		}
 	}
 
 	/// <summary>
@@ -623,12 +1157,21 @@ namespace SimpleDiscord
 		/// The URL.
 		/// </value>
 		string Url { get; }
+
+		public static readonly JsonEncodedText UrlProperty = JsonEncodedText.Encode("url");
+
+		internal static void WriteToJson(ILinkButtonComponent component, Utf8JsonWriter writer)
+		{
+			IButtonComponent.WriteToJson(component, writer);
+			writer.WriteNumber(IInteractionButtonComponent.StyleProperty, (int)ButtonComponentStyle.Link);
+			writer.WriteString(UrlProperty, component.Url);
+		}
 	}
 
 	/// <summary>
 	/// Represents a select menu message component (component type 3).
 	/// </summary>
-	public interface ISelectMenuComponent : IInteractionComponent, IDisableableComponent
+	public interface ISelectMenuComponent : IComponent, IInteractionComponent, IDisableableComponent
 	{
 		/// <summary>
 		/// Gets the possible choices in the select menu.
@@ -661,6 +1204,22 @@ namespace SimpleDiscord
 		/// The maximum number of items; default 1, max 25.
 		/// </value>
 		int MaxValues { get; }
+
+		public static readonly JsonEncodedText OptionsProperty = JsonEncodedText.Encode("options");
+		public static readonly JsonEncodedText PlaceholderProperty = JsonEncodedText.Encode("placeholder");
+		public static readonly JsonEncodedText MinValuesProperty = JsonEncodedText.Encode("min_values");
+		public static readonly JsonEncodedText MaxValuesProperty = JsonEncodedText.Encode("max_values");
+
+		internal static void WriteToJson(ISelectMenuComponent component, Utf8JsonWriter writer)
+		{
+			writer.WriteNumber(TypeProperty, 3);
+			IInteractionComponent.WriteToJson(component, writer);
+			IDisableableComponent.WriteToJson(component, writer);
+			writer.WriteObjectArray(OptionsProperty, component.Options, ISelectMenuComponentOption.WriteToJson);
+			if (component.Placeholder is not null) writer.WriteString(PlaceholderProperty, component.Placeholder);
+			if (component.MinValues != 1) writer.WriteNumber(MinValuesProperty, component.MinValues);
+			if (component.MaxValues != 1) writer.WriteNumber(MaxValuesProperty, component.MaxValues);
+		}
 	}
 
 	/// <summary>
@@ -691,6 +1250,18 @@ namespace SimpleDiscord
 		/// <see langword="true"/> if the option is selected by default; otherwise, <see langword="false"/>.
 		/// </value>
 		bool IsDefault { get; }
+
+		public static readonly JsonEncodedText ValueProperty = JsonEncodedText.Encode("value");
+		public static readonly JsonEncodedText DescriptionProperty = JsonEncodedText.Encode("description");
+		public static readonly JsonEncodedText IsDefaultProperty = JsonEncodedText.Encode("default");
+
+		internal static void WriteToJson(ISelectMenuComponentOption option, Utf8JsonWriter writer)
+		{
+			ILabeledElement.WriteToJson(option, writer);
+			writer.WriteString(ValueProperty, option.Value);
+			if (option.Description is not null) writer.WriteString(DescriptionProperty, option.Description);
+			if (option.IsDefault) writer.WriteBoolean(IsDefaultProperty, true);
+		}
 	}
 
 	#endregion
@@ -725,6 +1296,22 @@ namespace SimpleDiscord
 		/// If this is a command, subcommand or subcommand group that has parameters, a collection of those parameters; otherwise, <see langword="null"/>.
 		/// </value>
 		IEnumerable<IApplicationCommandOption>? Options { get; }
+
+		public static readonly JsonEncodedText NameProperty = JsonEncodedText.Encode("name");
+		public static readonly JsonEncodedText DescriptionProperty = JsonEncodedText.Encode("description");
+		public static readonly JsonEncodedText OptionsProperty = JsonEncodedText.Encode("options");
+
+		internal static void WriteToJson(IApplicationCommandNode node, Utf8JsonWriter writer)
+		{
+			WriteToJson(writer, node.Name, node.Description, node.Options);
+		}
+
+		internal static void WriteToJson(Utf8JsonWriter writer, string name, string description, IEnumerable<IApplicationCommandOption>? options = null)
+		{
+			writer.WriteString(NameProperty, name);
+			writer.WriteString(DescriptionProperty, description);
+			writer.WriteObjectArray(OptionsProperty, options, IApplicationCommandOption.WriteToJson);
+		}
 	}
 
 	/// <summary>
@@ -739,6 +1326,19 @@ namespace SimpleDiscord
 		/// <see langword="true"/> if the command has default permission; otherwise, <see langword="false"/>.
 		/// </value>
 		bool HasDefaultPermission { get; }
+
+		public static readonly JsonEncodedText HasDefaultPermissionProperty = JsonEncodedText.Encode("default_permission");
+
+		internal static void WriteToJson(IApplicationCommand command, Utf8JsonWriter writer)
+		{
+			WriteToJson(writer, command.Name, command.Description, command.Options, command.HasDefaultPermission);
+		}
+
+		internal static void WriteToJson(Utf8JsonWriter writer, string name, string description, IEnumerable<IApplicationCommandOption>? options = null, bool hasDefaultPermission = true)
+		{
+			IApplicationCommandNode.WriteToJson(writer, name, description, options);
+			if (!hasDefaultPermission) writer.WriteBoolean(HasDefaultPermissionProperty, false);
+		}
 	}
 
 	/// <summary>
@@ -788,6 +1388,36 @@ namespace SimpleDiscord
 		/// The allowed channel types for this command option. This should be <see langword="null"/> if <see cref="Type"/> is not <see cref="ApplicationCommandOptionType.Channel"/>, or if any channel type is allowed.
 		/// </value>
 		IEnumerable<ChannelType>? ChannelTypes { get; }
+
+		public static readonly JsonEncodedText TypeProperty = JsonEncodedText.Encode("type");
+		public static readonly JsonEncodedText ChoicesProperty = JsonEncodedText.Encode("choices");
+		public static readonly JsonEncodedText HasAutocompletionProperty = JsonEncodedText.Encode("autocomplete");
+		public static readonly JsonEncodedText IsRequiredProperty = JsonEncodedText.Encode("required");
+		public static readonly JsonEncodedText ChannelTypesProperty = JsonEncodedText.Encode("channel_types");
+
+		internal static void WriteToJson(IApplicationCommandOption option, Utf8JsonWriter writer)
+		{
+			if (option is null) throw new ArgumentException("commandOptions contains a null value.");
+
+			writer.WriteNumber(TypeProperty, (int)option.Type);
+			if (option.IsRequired) writer.WriteBoolean(IsRequiredProperty, true);
+			if (option.HasAutocompletion) writer.WriteBoolean(HasAutocompletionProperty, true);
+
+			IApplicationCommandNode.WriteToJson(option, writer);
+
+			writer.WriteObjectArray(ChoicesProperty, option.Choices, IApplicationCommandOptionChoice.WriteToJson);
+
+			IEnumerable<ChannelType>? channelTypes = option.ChannelTypes;
+			if (channelTypes is not null)
+			{
+				writer.WriteStartArray(ChannelTypesProperty);
+				foreach (ChannelType channelType in channelTypes)
+				{
+					writer.WriteNumberValue((int)channelType);
+				}
+				writer.WriteEndArray();
+			}
+		}
 	}
 
 	/// <summary>
@@ -811,13 +1441,16 @@ namespace SimpleDiscord
 		/// </value>
 		OneOf<string, int> Value { get; }
 
+		public static readonly JsonEncodedText NameProperty = JsonEncodedText.Encode("name");
+		public static readonly JsonEncodedText ValueProperty = JsonEncodedText.Encode("value");
+
 		internal static void WriteToJson(IApplicationCommandOptionChoice choice, Utf8JsonWriter writer)
 		{
-			writer.WriteString("name", choice.Name);
+			writer.WriteString(NameProperty, choice.Name);
 
 			OneOf<string, int> value = choice.Value;
-			if (value.IsT0) writer.WriteString("value", value.AsT0);
-			else if (value.IsT1) writer.WriteNumber("value", value.AsT1);
+			if (value.IsT0) writer.WriteString(ValueProperty, value.AsT0);
+			else if (value.IsT1) writer.WriteNumber(ValueProperty, value.AsT1);
 		}
 	}
 
@@ -866,6 +1499,20 @@ namespace SimpleDiscord
 		/// <see langword="true"/> to allow the command for this role or user; <see langword="false"/> to disallow it.
 		/// </value>
 		bool Permission { get; }
+
+		public static readonly JsonEncodedText IdProperty = JsonEncodedText.Encode("id");
+		public static readonly JsonEncodedText TypeProperty = JsonEncodedText.Encode("type");
+		public static readonly JsonEncodedText PermissionProperty = JsonEncodedText.Encode("permission");
+
+		// I don't know where else to put this
+		internal static readonly JsonEncodedText PermissionsProperty = JsonEncodedText.Encode("permissions");
+
+		internal static void WriteToJson(IApplicationCommandPermission permission, Utf8JsonWriter writer)
+		{
+			writer.WriteString(IdProperty, permission.Id);
+			writer.WriteNumber(TypeProperty, (int)permission.Type);
+			writer.WriteBoolean(PermissionProperty, permission.Permission);
+		}
 	}
 
 	/// <summary>
@@ -880,6 +1527,25 @@ namespace SimpleDiscord
 	#endregion
 
 	#region Interaction responses
+
+	interface IInteractionResponse
+	{
+		/// <summary>
+		/// Gets a value indicating what type of interaction response this is.
+		/// </summary>
+		/// <value>
+		/// The type of interaction response.
+		/// </value>
+		InteractionResponseType Type { get; }
+
+		public static readonly JsonEncodedText TypeProperty = JsonEncodedText.Encode("type");
+		public static readonly JsonEncodedText DataProperty = JsonEncodedText.Encode("data");
+
+		internal static void WriteToJson(Utf8JsonWriter writer, InteractionResponseType type)
+		{
+			writer.WriteNumber(DataProperty, (int)type);
+		}
+	}
 
 	/// <summary>
 	/// Represents the type of response to an interaction.

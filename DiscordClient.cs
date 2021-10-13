@@ -29,11 +29,6 @@ namespace SimpleDiscord
 
 		#region Static/constant fields
 
-		// Some limits defined by Discord
-		public const int MaxDiscordMessageLength = 2000;
-		public const int MaxChannelNameLength = 100;
-		public const int MaxChannelTopicLength = 1024;
-
 		// Number of milliseconds to wait between sending stuff over the WebSocket connection.
 		// The actual ratelimit is 120 commands per minute instead of 1 per half a second, but this is easier to code and I don't need to send that much over the connection anyway.
 		const int webSocketRateLimit = 500;
@@ -897,7 +892,7 @@ namespace SimpleDiscord
 		/// <para>At least one of <paramref name="content"/> and <paramref name="embeds"/> must be specified.</para>
 		/// </remarks>
 		/// <param name="channelId">The ID of the channel.</param>
-		/// <param name="content">The content of the message to send. Maximum length is <see cref="MaxDiscordMessageLength"/>.</param>
+		/// <param name="content">The content of the message to send. Maximum length is <see cref="IMessage.MaxContentLength"/>.</param>
 		/// <param name="referencedMessageId">If not <see langword="null"/>, the posted message will be a reply to the message ID.</param>
 		/// <param name="embeds">Lists the message's embeds.</param>
 		/// <param name="components">Lists the message components. Each subcollection represents one action row, and each element of that action row is a message component.</param>
@@ -928,14 +923,14 @@ namespace SimpleDiscord
 			{
 				if (embeds is null) throw new ArgumentException("Content and embeds are both null.");
 			}
-			else if (content.Length > MaxDiscordMessageLength)
+			else if (content.Length > IMessage.MaxContentLength)
 			{
-				throw new ArgumentException("Message content cannot be longer than " + MaxDiscordMessageLength + " characters.", nameof(content));
+				throw new ArgumentException("Message content cannot be longer than " + IMessage.MaxContentLength + " characters.", nameof(content));
 			}
 
 			ReadOnlyMemory<byte> bodyContent = Util.CreateJson(writer =>
 			{
-				WriteMessageJson(writer, content, null, referencedMessageId, embeds, components, allowedMentions, isTts);
+				IMessage.WriteToJson(writer, content, null, referencedMessageId, embeds, components, allowedMentions, isTts);
 			});
 
 #if DEBUG
@@ -954,7 +949,7 @@ namespace SimpleDiscord
 		/// </remarks>
 		/// <param name="channelId">The ID of the channel containing the message to edit.</param>
 		/// <param name="messageId">The ID of the message to edit.</param>
-		/// <param name="content">The new content of the message, or <see langword="null"/> to not edit the message's content. Maximum length is <see cref="MaxDiscordMessageLength"/>.</param>
+		/// <param name="content">The new content of the message, or <see langword="null"/> to not edit the message's content. Maximum length is <see cref="IMessage.MaxContentLength"/>.</param>
 		/// <param name="embeds">The new list of embeds of the message, or <see langword="null"/> to not edit the message's embeds.</param>
 		/// <param name="components">The new list of components of the message, or <see langword="null"/> to not edit the message's components.</param>
 		/// <param name="flags">The new flags of the message, or <see langword="null"/> to not edit the message's flags. When specifying flags, ensure to include all previously set flags/bits in addition to ones that you are modifying. Currently, only <see cref="MessageFlags.SuppressEmbeds"/> can currently be set/unset.</param>
@@ -983,7 +978,7 @@ namespace SimpleDiscord
 
 			return await SendHttpRequest(HttpMethod.Patch, endpoint, string.Format(endpoint, messageId), Util.CreateJson(writer =>
 			{
-				WriteMessageJson(writer, content, flags, null, embeds, components, allowedMentions);
+				IMessage.WriteToJson(writer, content, flags, null, embeds, components, allowedMentions);
 			}), cancellationToken: cancellationToken);
 		}
 
@@ -1107,7 +1102,7 @@ namespace SimpleDiscord
 		/// </remarks>
 		/// <param name="guildId">The ID of the guild.</param>
 		/// <param name="name">The name of the channel. Maximum length is <see cref="MaxChannelNameLength"/>.</param>
-		/// <param name="channelType">The type of channel.</param>
+		/// <param name="type">The type of channel.</param>
 		/// <param name="topic">The topic of the channel. Maximum length is <see cref="MaxChannelTopicLength"/>.</param>
 		/// <param name="parentId">ID of the parent category for a channel.</param>
 		/// <param name="position">The sorting position of the channel, with 0 being at the bottom.</param>
@@ -1126,7 +1121,7 @@ namespace SimpleDiscord
 		protected async Task<DiscordRequestResult> CreateChannel(
 			string guildId,
 			string name,
-			ChannelType channelType,
+			ChannelType type,
 			string? topic = null,
 			string? parentId = null,
 			int position = 0,
@@ -1141,31 +1136,12 @@ namespace SimpleDiscord
 
 			if (name is null) throw new ArgumentNullException(nameof(name));
 			if (name.Length == 0) throw new ArgumentException("Channel name is an empty string.", nameof(name));
-			if (name.Length > MaxChannelNameLength) throw new ArgumentException("Channel name is longer than " + MaxChannelNameLength + " characters.", nameof(name));
-			if (topic is not null && topic.Length > MaxChannelTopicLength) throw new ArgumentException("Channel topic is longer than " + MaxChannelTopicLength + " characters.", nameof(topic));
+			if (name.Length > IChannel.MaxNameLength) throw new ArgumentException("Channel name is longer than " + IChannel.MaxNameLength + " characters.", nameof(name));
+			if (topic is not null && topic.Length > IChannel.MaxTopicLength) throw new ArgumentException("Channel topic is longer than " + IChannel.MaxTopicLength + " characters.", nameof(topic));
 
 			return await SendHttpRequest(HttpMethod.Post, $"guilds/{guildId}/channels", null, Util.CreateJson(writer =>
 			{
-				writer.WriteString("name", name);
-				writer.WriteNumber("type", (int)channelType);
-				if (topic is not null) writer.WriteString("topic", topic);
-				if (parentId is not null) writer.WriteString("parent_id", parentId);
-				if (position != 0) writer.WriteNumber("position", position);
-				if (permissionOverwrites is not null)
-				{
-					writer.WriteStartArray("permission_overwrites");
-					foreach (IPermissionOverwrite overwrite in permissionOverwrites)
-					{
-						writer.WriteStartObject();
-						writer.WriteString("id", overwrite.Id);
-						writer.WriteNumber("type", (int)overwrite.Type);
-						writer.WriteString("allow", overwrite.Allow);
-						writer.WriteString("deny", overwrite.Deny);
-						writer.WriteEndObject();
-					}
-					writer.WriteEndArray();
-				}
-				if (isNsfw) writer.WriteBoolean("nsfw", true);
+				IChannel.WriteToJson(writer, name, type, topic, parentId, position, permissionOverwrites, isNsfw);
 			}), reason, cancellationToken);
 		}
 
@@ -1187,7 +1163,7 @@ namespace SimpleDiscord
 			if (name is not null)
 			{
 				if (name.Length == 0) throw new ArgumentException("Channel name is an empty string.", nameof(name));
-				if (name.Length > MaxChannelNameLength) throw new ArgumentException("Channel name is longer than " + MaxChannelNameLength + " characters.", nameof(name));
+				if (name.Length > IChannel.MaxNameLength) throw new ArgumentException("Channel name is longer than " + IChannel.MaxNameLength + " characters.", nameof(name));
 			}
 
 			return await SendHttpRequest(HttpMethod.Patch, $"channels/{channelId}", null, Util.CreateJson(writer =>
@@ -1212,7 +1188,7 @@ namespace SimpleDiscord
 			Util.ThrowIfInvalidId(userId, nameof(userId));
 			return await SendHttpRequest(HttpMethod.Post, "users/@me/channels", null, Util.CreateJson(writer =>
 			{
-				writer.WriteString("recipient_id", userId);
+				writer.WriteString(IDm.RecipientIdProperty, userId);
 			}), cancellationToken: cancellationToken);
 		}
 
@@ -1244,11 +1220,7 @@ namespace SimpleDiscord
 			Util.ThrowIfInvalidId(guildId, nameof(guildId));
 			return await SendHttpRequest(HttpMethod.Post, $"guilds/{guildId}/roles", null, Util.CreateJson(writer =>
 			{
-				if (name is not null) writer.WriteString("name", name);
-				if (permissions is not null) writer.WriteString("permissions", permissions);
-				if (colour != 0) writer.WriteNumber("color", colour);
-				if (isHoisted) writer.WriteBoolean("hoist", true);
-				if (isMentionable) writer.WriteBoolean("mentionable", true);
+				IRole.WriteToJson(writer, name, permissions, colour, isHoisted, isMentionable);
 			}), reason, cancellationToken);
 		}
 
@@ -1287,8 +1259,7 @@ namespace SimpleDiscord
 				foreach (IRolePosition position in positions)
 				{
 					writer.WriteStartObject();
-					writer.WriteString("id", position.Id);
-					writer.WriteNumber("position", position.Position);
+					IRolePosition.WriteToJson(position, writer);
 					writer.WriteEndObject();
 				}
 			}), reason, cancellationToken);
@@ -1327,11 +1298,7 @@ namespace SimpleDiscord
 
 			return await SendHttpRequest(HttpMethod.Patch, endpoint, string.Format(endpoint, roleId), Util.CreateJson(writer =>
 			{
-				if (name is not null) writer.WriteString("name", name);
-				if (permissions is not null) writer.WriteString("permissions", permissions);
-				if (colour is not null) writer.WriteNumber("color", (int)colour);
-				if (isHoisted is not null) writer.WriteBoolean("hoist", (bool)isHoisted);
-				if (isMentionable is not null) writer.WriteBoolean("mentionable", (bool)isMentionable);
+				IRole.WriteToJson(writer, name, permissions, colour, isHoisted, isMentionable);
 			}), reason, cancellationToken);
 		}
 
@@ -1410,7 +1377,7 @@ namespace SimpleDiscord
 		}
 
 		/// <param name="responseType">The response type to use.</param>
-		/// <param name="content">The content of the message to send or update, depending on the <paramref name="responseType"/>. Maximum length is <see cref="MaxDiscordMessageLength"/>.</param>
+		/// <param name="content">The content of the message to send or update, depending on the <paramref name="responseType"/>. Maximum length is <see cref="IMessage.MaxContentLength"/>.</param>
 		/// <param name="isEphemeral">If <see langword="true"/>, the message will be ephemeral.</param>
 		/// <param name="embeds">Lists the message's embeds.</param>
 		/// <param name="components">Lists the message components. Each subcollection represents one action row, and each element of that action row is a message component.</param>
@@ -1432,10 +1399,10 @@ namespace SimpleDiscord
 		{
 			return await RespondToInteraction(interactionId, interactionToken, Util.CreateJson(writer =>
 			{
-				writer.WriteNumber("type", (int)responseType);
+				IInteractionResponse.WriteToJson(writer, responseType);
 
-				writer.WriteStartObject("data");
-				WriteMessageJson(writer, content, isEphemeral ? MessageFlags.Ephemeral : MessageFlags.None, null, embeds, components, allowedMentions, isTts);
+				writer.WriteStartObject(IApplicationCommandOption.ChoicesProperty);
+				IMessage.WriteToJson(writer, content, isEphemeral ? MessageFlags.Ephemeral : MessageFlags.None, null, embeds, components, allowedMentions, isTts);
 				writer.WriteEndObject();
 			}), cancellationToken);
 		}
@@ -1453,10 +1420,10 @@ namespace SimpleDiscord
 		{
 			return await RespondToInteraction(interactionId, interactionToken, Util.CreateJson(writer =>
 			{
-				writer.WriteNumber("type", (int)responseType);
+				IInteractionResponse.WriteToJson(writer, responseType);
 
-				writer.WriteStartObject("data");
-				writer.WriteObjectArray("choices", choices, choice => IApplicationCommandOptionChoice.WriteToJson(choice, writer));
+				writer.WriteStartObject(IInteractionResponse.DataProperty);
+				writer.WriteObjectArray(IApplicationCommandOption.ChoicesProperty, choices, IApplicationCommandOptionChoice.WriteToJson);
 				writer.WriteEndObject();
 			}), cancellationToken);
 		}
@@ -1470,7 +1437,7 @@ namespace SimpleDiscord
 		{
 			return await RespondToInteraction(interactionId, interactionToken, Util.CreateJson(writer =>
 			{
-				writer.WriteNumber("type", (int)responseType);
+				IInteractionResponse.WriteToJson(writer, responseType);
 			}), cancellationToken);
 		}
 
@@ -1526,7 +1493,7 @@ namespace SimpleDiscord
 
 			return await SendHttpRequest(HttpMethod.Patch, endpoint, string.Format(endpoint, UserId, interactionToken), Util.CreateJson(writer =>
 			{
-				WriteMessageJson(writer, content, null, null, embeds, components, allowedMentions);
+				IMessage.WriteToJson(writer, content, null, null, embeds, components, allowedMentions);
 			}), cancellationToken: cancellationToken);
 		}
 
@@ -1537,9 +1504,9 @@ namespace SimpleDiscord
 		/// <para>You do not have to specify the <paramref name="userId"/> only if the client has connected at least once; then the client's known user ID will be used.</para>
 		/// </remarks>
 		/// <param name="guildId">The ID of the guild for which to register the command, or <see langword="null"/> to register a global command.</param>
-		/// <param name="commandName">The 1-32 character name of the command. This should match <c>^[\w-]{1,32}$</c>.</param>
-		/// <param name="commandDescription">The description of the command.</param>
-		/// <param name="commandOptions">The parameters of the command.</param>
+		/// <param name="name">The 1-32 character name of the command. This should match <c>^[\w-]{1,32}$</c>.</param>
+		/// <param name="description">The description of the command.</param>
+		/// <param name="options">The parameters of the command.</param>
 		/// <param name="hasDefaultPermission"><see langword="true"/> if the command is enabled by default when the app is added to a guild; otherwise, false.</param>
 		/// <param name="userId">The ID of the application/client. If not specified, the cached ID will be used. Must be specified if this client has not been connected yet.</param>
 		/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
@@ -1547,16 +1514,16 @@ namespace SimpleDiscord
 		/// <exception cref="ArgumentNullException"><paramref name="userId"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentException"><paramref name="userId"/> is not a valid ID.</exception>
 		/// <exception cref="InvalidOperationException">You have not connected the client at least once, or specified a user ID.</exception>
-		/// <exception cref="ArgumentNullException"><paramref name="commandName"/> is <see langword="null"/>.</exception>
-		/// <exception cref="ArgumentNullException"><paramref name="commandDescription"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="description"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentNullException"><paramref name="guildId"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentException"><paramref name="guildId"/> is not a valid ID.</exception>
-		/// <exception cref="ArgumentException"><paramref name="commandOptions"/> contains a <see langword="null"/> value.</exception>
+		/// <exception cref="ArgumentException"><paramref name="options"/> contains a <see langword="null"/> value.</exception>
 		protected async Task<DiscordRequestResult> RegisterApplicationCommand(
 			string? guildId,
-			string commandName,
-			string commandDescription,
-			IEnumerable<IApplicationCommandOption>? commandOptions = null,
+			string name,
+			string description,
+			IEnumerable<IApplicationCommandOption>? options = null,
 			bool hasDefaultPermission = true,
 			string? userId = null,
 			CancellationToken cancellationToken = default
@@ -1566,8 +1533,8 @@ namespace SimpleDiscord
 
 			userId ??= UserId ?? throw new InvalidOperationException("You must either have connected the client at least once, or specify a user ID.");
 
-			if (commandName is null) throw new ArgumentNullException(nameof(commandName));
-			if (commandDescription is null) throw new ArgumentNullException(nameof(commandDescription));
+			if (name is null) throw new ArgumentNullException(nameof(name));
+			if (description is null) throw new ArgumentNullException(nameof(description));
 
 			Util.ThrowIfInvalidId(guildId, nameof(guildId), true);
 
@@ -1575,39 +1542,7 @@ namespace SimpleDiscord
 
 			return await SendHttpRequest(HttpMethod.Post, endpoint, string.Format(endpoint, userId, guildId), Util.CreateJson(writer =>
 			{
-				writer.WriteString("name", commandName);
-				writer.WriteString("description", commandDescription);
-
-				if (!hasDefaultPermission) writer.WriteBoolean("default_permission", false);
-
-				// Recursively write options
-				writer.WriteObjectArray("options", commandOptions, WriteOneApplicationCommandOption);
-
-				void WriteOneApplicationCommandOption(IApplicationCommandOption option)
-				{
-					if (option is null) throw new ArgumentException("commandOptions contains a null value.");
-
-					writer.WriteNumber("type", (int)option.Type);
-					writer.WriteString("name", option.Name);
-					writer.WriteString("description", option.Description);
-					if (option.IsRequired) writer.WriteBoolean("required", true);
-					if (option.HasAutocompletion) writer.WriteBoolean("autocomplete", true);
-
-					writer.WriteObjectArray("choices", option.Choices, choice => IApplicationCommandOptionChoice.WriteToJson(choice, writer));
-
-					writer.WriteObjectArray("options", option.Options, WriteOneApplicationCommandOption);
-
-					IEnumerable<ChannelType>? channelTypes = option.ChannelTypes;
-					if (channelTypes is not null)
-					{
-						writer.WriteStartArray("channel_types");
-						foreach (ChannelType channelType in channelTypes)
-						{
-							writer.WriteNumberValue((int)channelType);
-						}
-						writer.WriteEndArray();
-					}
-				}
+				IApplicationCommand.WriteToJson(writer, name, description, options, hasDefaultPermission);
 			}), cancellationToken: cancellationToken);
 		}
 
@@ -1680,174 +1615,8 @@ namespace SimpleDiscord
 
 			return await SendHttpRequest(HttpMethod.Put, endpoint, string.Format(endpoint, userId, guildId, commandId), Util.CreateJson(writer =>
 			{
-				writer.WriteStartArray("permissions");
-				foreach (IApplicationCommandPermission permission in permissions)
-				{
-					writer.WriteStartObject();
-					writer.WriteString("id", permission.Id);
-					writer.WriteNumber("type", (int)permission.Type);
-					writer.WriteBoolean("permission", permission.Permission);
-					writer.WriteEndObject();
-				}
-				writer.WriteEndArray();
+				writer.WriteObjectArray(IApplicationCommandPermission.PermissionsProperty, permissions, IApplicationCommandPermission.WriteToJson);
 			}), cancellationToken: cancellationToken);
-		}
-
-		// Used in various HTTP requests to write message data
-		private static void WriteMessageJson(
-			Utf8JsonWriter writer,
-			string? content,
-			MessageFlags? flags,
-			string? referencedMessageId,
-			IEnumerable<IEmbed>? embeds,
-			IEnumerable<IActionRowComponent>? components,
-			IAllowedMentions? allowedMentions,
-			bool isTts = false
-		)
-		{
-			// Create message JSON object
-			if (content is not null)
-			{
-				writer.WriteString("content", content);
-			}
-			if (flags is not null)
-			{
-				writer.WriteNumber("flags", (int)flags);
-			}
-			if (referencedMessageId is not null)
-			{
-				writer.WriteString("message_reference", referencedMessageId);
-			}
-			if (isTts)
-			{
-				writer.WriteBoolean("tts", true);
-			}
-
-			// Write embeds
-			writer.WriteObjectArray("embeds", embeds, embed =>
-			{
-				writer.WriteString("type", "rich");
-				if (embed.Title is not null) writer.WriteString("title", embed.Title);
-				if (embed.Description is not null) writer.WriteString("description", embed.Description);
-				if (embed.Url is not null) writer.WriteString("url", embed.Url);
-				if (embed.Timestamp is not null) writer.WriteString("timestamp", ((DateTime)embed.Timestamp).ToString("o"));
-				if (embed.Colour != 0) writer.WriteNumber("color", embed.Colour);
-
-				if (embed.Author is not null)
-				{
-					writer.WriteStartObject("author");
-					if (embed.Author.Name is not null) writer.WriteString("name", embed.Author.Name);
-					if (embed.Author.Url is not null) writer.WriteString("url", embed.Author.Url);
-					if (embed.Author.IconUrl is not null) writer.WriteString("icon_url", embed.Author.IconUrl);
-					writer.WriteEndObject();
-				}
-
-				if (embed.ImageUrl is not null)
-				{
-					writer.WriteStartObject("image");
-					writer.WriteString("url", embed.ImageUrl);
-					writer.WriteEndObject();
-				}
-
-				if (embed.ThumbnailUrl is not null)
-				{
-					writer.WriteStartObject("thumbnail");
-					writer.WriteString("url", embed.ThumbnailUrl);
-					writer.WriteEndObject();
-				}
-
-				if (embed.Fields is not null)
-				{
-					writer.WriteObjectArray("fields", embed.Fields, field =>
-					{
-						writer.WriteString("name", field.Name);
-						writer.WriteString("value", field.Value);
-						if (field.IsInline) writer.WriteBoolean("inline", true);
-					});
-				}
-
-				if (embed.Footer is not null)
-				{
-					writer.WriteStartObject("footer");
-					writer.WriteString("text", embed.Footer.Text);
-					if (embed.Footer.IconUrl is not null) writer.WriteString("icon_url", embed.Footer.IconUrl);
-					writer.WriteEndObject();
-				}
-			});
-
-			// Write components
-			writer.WriteObjectArray("components", components, actionRow =>
-			{
-				writer.WriteNumber("type", 1);
-
-				writer.WriteObjectArray("components", actionRow.Components, component => component.Switch(
-
-					// Interaction button components
-					component =>
-					{
-						writer.WriteNumber("type", 2);
-						writer.WriteNumber("style", (int)component.Style);
-						ILabeledElement.WriteToJson(component, writer);
-						writer.WriteString("custom_id", component.CustomId);
-						if (component.IsDisabled)
-						{
-							writer.WriteBoolean("disabled", true);
-						}
-					},
-
-					// Link button components
-					component =>
-					{
-						writer.WriteNumber("type", 2);
-						writer.WriteNumber("style", (int)ButtonComponentStyle.Link);
-						ILabeledElement.WriteToJson(component, writer);
-						writer.WriteString("url", component.Url);
-						if (component.IsDisabled)
-						{
-							writer.WriteBoolean("disabled", true);
-						}
-					},
-
-					// Select menu components
-					component =>
-					{
-						writer.WriteNumber("type", 3);
-						writer.WriteString("custom_id", component.CustomId);
-						writer.WriteObjectArray("options", component.Options, option =>
-						{
-							ILabeledElement.WriteToJson(option, writer);
-							writer.WriteString("value", option.Value);
-							if (option.Description is not null) writer.WriteString("description", option.Description);
-							if (option.IsDefault) writer.WriteBoolean("default", true);
-						});
-						if (component.Placeholder is not null) writer.WriteString("placeholder", component.Placeholder);
-						if (component.MinValues != 1) writer.WriteNumber("min_values", component.MinValues);
-						if (component.MaxValues != 1) writer.WriteNumber("max_values", component.MaxValues);
-						if (component.IsDisabled) writer.WriteBoolean("disabled", true);
-					}
-				));
-			});
-
-			if (allowedMentions is not null)
-			{
-				writer.WriteStartObject("allowed_mentions");
-
-				IEnumerable<string>? userMentions = allowedMentions.AllowedUserMentions;
-				IEnumerable<string>? roleMentions = allowedMentions.AllowedRoleMentions;
-
-				writer.WriteStartArray("parse");
-				if (userMentions is null) writer.WriteStringValue("users");
-				if (roleMentions is null) writer.WriteStringValue("roles");
-				if (allowedMentions.AllowEveryoneMentions) writer.WriteStringValue("everyone");
-				writer.WriteEndArray();
-
-				writer.WriteStringArray("users", userMentions);
-				writer.WriteStringArray("roles", roleMentions);
-
-				if (allowedMentions.MentionRepliedUser) writer.WriteBoolean("replied_user", true);
-
-				writer.WriteEndObject();
-			}
 		}
 
 		#endregion

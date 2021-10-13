@@ -54,12 +54,12 @@ namespace SimpleDiscord
 		/// <param name="writer">The writer to write to.</param>
 		/// <param name="propertyName">The UTF-16 encoded property name of the JSON array to be transcoded and written as UTF-8.</param>
 		/// <param name="array">The array to write. If <see langword="null"/>, nothing is written.</param>
-		/// <param name="writeObjectValues">A delegate that writes one instance of <typeparamref name="T"/> to the <paramref name="writer"/>. It does not need to call <see cref="Utf8JsonWriter.WriteStartObject()"/> or <see cref="Utf8JsonWriter.WriteEndObject()"/>, because that will already be done for you.</param>
+		/// <param name="writeObjectValues">A delegate that writes the properties of one instance of <typeparamref name="T"/> to the <see cref="Utf8JsonWriter"/>. It does not need to call <see cref="Utf8JsonWriter.WriteStartObject()"/> or <see cref="Utf8JsonWriter.WriteEndObject()"/>, because that will already be done for you.</param>
 		/// <exception cref="ArgumentException"><paramref name="propertyName"/> is too large.</exception>
 		/// <exception cref="InvalidOperationException">The depth of the JSON exceeds the maximum depth of 1,000.</exception>
 		/// <exception cref="InvalidOperationException">Validation is enabled, and this write operation would produce invalid JSON.</exception>
 		/// <exception cref="ArgumentNullException"><paramref name="propertyName"/> is <see langword="null"/>.</exception>
-		internal static void WriteObjectArray<T>(this Utf8JsonWriter writer, string propertyName, IEnumerable<T>? array, Action<T> writeObjectValues)
+		internal static void WriteObjectArray<T>(this Utf8JsonWriter writer, JsonEncodedText propertyName, IEnumerable<T>? array, Action<T, Utf8JsonWriter> writeObjectValues)
 		{
 			if (array is null) return;
 
@@ -67,13 +67,13 @@ namespace SimpleDiscord
 			foreach (T element in array)
 			{
 				writer.WriteStartObject();
-				writeObjectValues(element);
+				writeObjectValues(element, writer);
 				writer.WriteEndObject();
 			}
 			writer.WriteEndArray();
 		}
 
-		internal static void WriteStringArray(this Utf8JsonWriter writer, string propertyName, IEnumerable<string>? array)
+		internal static void WriteStringArray(this Utf8JsonWriter writer, JsonEncodedText propertyName, IEnumerable<string>? array)
 		{
 			if (array is null) return;
 
