@@ -1401,7 +1401,7 @@ namespace SimpleDiscord
 			{
 				IInteractionResponse.WriteToJson(writer, responseType);
 
-				writer.WriteStartObject(IApplicationCommandOption.ChoicesProperty);
+				writer.WriteStartObject(IInteractionResponse.DataProperty);
 				IMessage.WriteToJson(writer, content, isEphemeral ? MessageFlags.Ephemeral : MessageFlags.None, null, embeds, components, allowedMentions, isTts);
 				writer.WriteEndObject();
 			}), cancellationToken);

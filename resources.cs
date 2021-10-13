@@ -479,12 +479,12 @@ namespace SimpleDiscord
 
 		internal static void WriteToJson(
 			Utf8JsonWriter writer,
-			string? content,
-			MessageFlags? flags,
-			string? referencedMessageId,
-			IEnumerable<IEmbed>? embeds,
-			IEnumerable<IActionRowComponent>? components,
-			IAllowedMentions? allowedMentions,
+			string? content = null,
+			MessageFlags? flags = null,
+			string? referencedMessageId = null,
+			IEnumerable<IEmbed>? embeds = null,
+			IEnumerable<IActionRowComponent>? components = null,
+			IAllowedMentions? allowedMentions = null,
 			bool isTts = false
 		)
 		{
@@ -1543,7 +1543,7 @@ namespace SimpleDiscord
 
 		internal static void WriteToJson(Utf8JsonWriter writer, InteractionResponseType type)
 		{
-			writer.WriteNumber(DataProperty, (int)type);
+			writer.WriteNumber(TypeProperty, (int)type);
 		}
 	}
 
