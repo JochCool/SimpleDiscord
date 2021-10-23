@@ -467,6 +467,7 @@ namespace SimpleDiscord
 		public static readonly JsonEncodedText ContentProperty = JsonEncodedText.Encode("content");
 		public static readonly JsonEncodedText FlagsProperty = JsonEncodedText.Encode("flags");
 		public static readonly JsonEncodedText ReferencedMessageProperty = JsonEncodedText.Encode("message_reference");
+		public static readonly JsonEncodedText ReferencedMessageIdProperty = JsonEncodedText.Encode("message_id");
 		public static readonly JsonEncodedText EmbedsProperty = JsonEncodedText.Encode("embeds");
 		public static readonly JsonEncodedText ComponentsProperty = JsonEncodedText.Encode("components");
 		public static readonly JsonEncodedText AllowedMentionsProperty = JsonEncodedText.Encode("allowed_mentions");
@@ -498,7 +499,9 @@ namespace SimpleDiscord
 			}
 			if (referencedMessageId is not null)
 			{
-				writer.WriteString(ReferencedMessageProperty, referencedMessageId);
+				writer.WriteStartObject(ReferencedMessageProperty);
+				writer.WriteString(ReferencedMessageIdProperty, referencedMessageId);
+				writer.WriteEndObject();
 			}
 			if (isTts)
 			{
